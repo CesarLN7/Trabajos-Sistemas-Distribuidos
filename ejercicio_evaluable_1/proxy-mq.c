@@ -1,4 +1,7 @@
-/*implementar funciones de claves.h (al principio vacías)*/
+/*implementar funciones de claves.h (al principio vacías). -2 cuando fallo*/
+#include <mqueue.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "claves/claves.h"
 
 
