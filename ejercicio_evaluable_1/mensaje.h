@@ -5,6 +5,7 @@
 
 struct message {
     int op;
+    char q_name[MAX];
     int key;
     char value1[MAX];
     int N_value2;
@@ -15,7 +16,6 @@ struct message {
     int *ptr2;
     double *ptr3;*/
     int res;
-    /*char client_queue_name[MAX];*/
 };
 
 #endif
