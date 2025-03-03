@@ -1,5 +1,5 @@
-#ifndef PROXY_MQ.H
-#define PROXY_MQ.H
+#ifndef _PROXY_MQ_H_
+#define _PROXY_MQ_H_
 
 int q_destroy();
 

@@ -1,4 +1,4 @@
-/*implementar funciones de claves.h (al principio vacías). -2 cuando fallo*/
+/*implementar funciones con colas (al principio vacías). -2 cuando fallo*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -79,9 +79,21 @@ int d_send_receive ( struct message *pr )
     return pr->status ;
 }
 
-int q_destroy() { printf("destroy"); return 1; };
+int q_destroy() {
+    struct message pr;
 
-int q_set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) { printf("set_value"); return 1; };
+    // init message
+    bzero(&pr, sizeof(struct message)) ;
+    pr.op    = 1 ;
+
+    // send request and receive response
+    d_send_receive(&pr) ;
+
+    // return status
+    return pr.res ;
+};
+
+/*int q_set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) { printf("set_value"); return 1; };
 
 int q_get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) { printf("get_value"); return 1; };
 
@@ -89,4 +101,4 @@ int q_modify_value(int key, char *value1, int N_value2, double *V_value2, struct
 
 int q_delete_key(int key) { printf("delete_key"); return 1; };
 
-int q_exist(int key) { printf("exist"); return 1; };
+int q_exist(int key) { printf("exist"); return 1; };*/

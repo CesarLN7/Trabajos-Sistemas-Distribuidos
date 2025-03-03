@@ -1,17 +1,17 @@
 #ifndef _MENSAJE_H_
 #define _MENSAJE_H_
 
-#define MAX 256
+#define MAXSTR 256
+#define MAXVEC 32
 
 struct message {
     int op;
-    char q_name[MAX];
+    char q_name[MAXSTR];
     int key;
-    char value1[MAX];
-    int N_value2;
+    char value1[MAXSTR];
+    int N_value2[MAXVEC];
     double V_value2;
-    /* No se incluye nada relativo a value3 porque éste
-    va incluido ya en el servidor, una vez se importa la librería claves.h*/
+    struct Coord *value3;
     /*char *ptr1;
     int *ptr2;
     double *ptr3;*/
