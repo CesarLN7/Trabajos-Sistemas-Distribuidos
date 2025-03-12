@@ -2,6 +2,7 @@
     "files.associations": {
         "claves.h": "c",
         "fcntl.h": "c",
-        "unistd.h": "c"
+        "unistd.h": "c",
+        "mensaje.h": "c"
     }
 }

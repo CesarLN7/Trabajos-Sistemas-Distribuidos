@@ -10,8 +10,8 @@ libclaves.so: $(CLAVES_PATH)/claves.c
 	$(CC) -fPIC -c -o $(CLAVES_PATH)/claves.o $<
 	$(CC) -shared -fPIC -o $@ $(CLAVES_PATH)/claves.o
 
-servidor:  servidor-mq.c proxy-mq.c
-	$(CC)  $(CFLAGS) $^ -o $@.out
+servidor:  servidor-mq.c proxy-mq.c $(CLAVES_PATH)/claves.c
+	$(CC) $(CFLAGS) $^ -o $@.out
 
 cliente: app-cliente.c libclaves.so
 	$(CC) -L. -lclaves $(CFLAGS) -o $@.out $< ./libclaves.so -lrt

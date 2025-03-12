@@ -1,6 +1,8 @@
 #ifndef _PROXY_MQ_H_
 #define _PROXY_MQ_H_
 
+#include "claves/claves.h"  // Para tener la definición de struct Coord
+
 int q_destroy();
 
 int q_set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3);
