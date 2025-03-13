@@ -13,6 +13,7 @@ int destroy() {
         return -1; // Error
     }
     fclose(file);
+    printf("Tuplas borradas\n");
     return 0; // Éxito
 }
 

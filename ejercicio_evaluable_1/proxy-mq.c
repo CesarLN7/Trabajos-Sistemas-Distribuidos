@@ -76,7 +76,7 @@ int d_send_receive(struct message *pr) {
 }
  
 // Implementa q_destroy: inicializa el servicio borrando todas las tuplas.
-int q_destroy() {
+int destroy() {
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 1;  // Código de operación para destroy
@@ -84,7 +84,7 @@ int q_destroy() {
 }
  
 // Implementa q_set_value: inserta la tupla <key, value1, value2, value3>.
-int q_set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
+int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 2;  // Código para set_value
@@ -97,7 +97,7 @@ int q_set_value(int key, char *value1, int N_value2, double *V_value2, struct Co
 }
  
 // Implementa q_get_value: recupera la tupla asociada a 'key'.
-int q_get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
+int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 3;  // Código para get_value
@@ -113,7 +113,7 @@ int q_get_value(int key, char *value1, int *N_value2, double *V_value2, struct C
 }
  
 // Implementa q_modify_value: modifica la tupla asociada a 'key'.
-int q_modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
+int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 4;  // Código para modify_value
@@ -126,7 +126,7 @@ int q_modify_value(int key, char *value1, int N_value2, double *V_value2, struct
 }
  
 // Implementa q_delete_key: elimina la tupla asociada a 'key'.
-int q_delete_key(int key) {
+int delete_key(int key) {
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 5;  // Código para delete_key
@@ -135,7 +135,7 @@ int q_delete_key(int key) {
 }
  
 // Implementa q_exist: verifica si existe la tupla asociada a 'key'.
-int q_exist(int key) {
+int exist(int key) {
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 6;  // Código para exist
