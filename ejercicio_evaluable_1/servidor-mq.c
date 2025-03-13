@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
         qs = mq_open(SERVER_QUEUE, O_CREAT | O_RDONLY, 0664, &attr);
         if (qs < 0) {
                 perror("mq_open");
-                return -1;
+                return -2;
         }
 
         // Configura el manejador de SIGINT para finalizar el servidor de forma segura.

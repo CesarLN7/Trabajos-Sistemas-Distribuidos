@@ -32,7 +32,7 @@ int d_send_receive(struct message *pr) {
     qs = mq_open(SERVER_QUEUE, O_WRONLY);
     if (qs == -1) {
         perror("mq_open");
-        return -1;
+        return -2;
     }
     
     // Crea el nombre de la cola exclusiva para este cliente.
@@ -41,7 +41,7 @@ int d_send_receive(struct message *pr) {
     if (qr == -1) {
         perror("mq_open");
         mq_close(qs);
-        return -1;
+        return -2;
     }
     // Se copia el nombre de la cola del cliente en el mensaje.
     strcpy(pr->q_name, qr_name);
@@ -53,7 +53,7 @@ int d_send_receive(struct message *pr) {
         mq_close(qs);
         mq_close(qr);
         mq_unlink(qr_name);
-        return -1;
+        return -2;
     }
  
     // Espera la respuesta en la cola exclusiva del cliente.
@@ -63,7 +63,7 @@ int d_send_receive(struct message *pr) {
         mq_close(qs);
         mq_close(qr);
         mq_unlink(qr_name);
-        return -1;
+        return -2;
     }
  
     // Cierra y elimina la cola del cliente.
