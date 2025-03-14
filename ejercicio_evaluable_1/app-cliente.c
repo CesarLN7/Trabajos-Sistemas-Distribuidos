@@ -165,7 +165,7 @@ int main() {
     }
 
     if (get_value(10, v1_get2, &N_v2_get2, v2_get2, &v3_get2) == 0) {
-        printf("Clave 10 recuperada correctamente (Error).\n");
+        printf("Clave 10 recuperada correctamente (Error, la clave  no existe).\n");
         printf("   - value1: %s\n", v1_get2);
         printf("   - N_value2: %d\n", N_v2_get2);
         printf("   - V_value2: ");
@@ -174,7 +174,7 @@ int main() {
         }
         printf("\n   - value3: (%d, %d)\n", v3_get2.x, v3_get2.y);
     } else {
-        printf("Error al recuperar la clave (Correcto).\n");
+        printf("Error al recuperar la clave (Correcto, la clave no existe).\n");
     }
 
     if (get_value(key1, v1_get1, &N_v2_get1, v2_get1, &v3_get1) == 0) {
@@ -214,9 +214,9 @@ int main() {
     }
 
     if (modify_value(20, v1_mod1, N_v2_mod1, v2_mod1, v3_mod1) == 0) {
-        printf("Clave 20 modificada correctamente (Error).\n");
+        printf("Clave 20 modificada correctamente (Error, la clave no exsite).\n");
     } else {
-        printf("No se ha podido modificar la clave 20 (Correcto) .\n");
+        printf("No se ha podido modificar la clave 20 (Correcto, la clave no exsite) .\n");
     }
 
     if (modify_value(key2, v1_mod2, N_v2_mod2, v2_mod2, v3_mod2) == 0) {
@@ -271,9 +271,9 @@ int main() {
         printf("Error al eliminar la clave %d.\n", key);
     }
     if (delete_key(20) == 0) {
-        printf("Clave 20 eliminada correctamente (Error).\n");
+        printf("Clave 20 eliminada correctamente (Error, la clave no existe).\n");
     } else {
-        printf("Error al eliminar la clave 20 (Correcto).\n");
+        printf("Error al eliminar la clave 20 (Correcto, la clave no existe).\n");
     }
 
     // 9. Comprobar que la clave ya no existe
