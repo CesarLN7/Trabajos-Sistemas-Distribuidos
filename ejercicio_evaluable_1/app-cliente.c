@@ -83,6 +83,11 @@ int main() {
     } else {
         printf("Error al insertar la clave %d.\n", key);
     }
+    if (set_value(key, v1_set, N_v2_set, v2_set, v3_set) == 0) {
+        printf("Clave %d insertada correctamente (Error, clave duplicada).\n", key);
+    } else {
+        printf("Error al insertar la clave %d (Correcto, clave duplicada).\n", key);
+    }
     if (set_value(key1, v1_set1, N_v2_set1, v2_set1, v3_set1) == 0) {
         printf("Clave %d insertada correctamente.\n", key1);
     } else {
@@ -264,6 +269,11 @@ int main() {
         printf("Clave %d eliminada correctamente.\n", key);
     } else {
         printf("Error al eliminar la clave %d.\n", key);
+    }
+    if (delete_key(20) == 0) {
+        printf("Clave 20 eliminada correctamente (Error).\n");
+    } else {
+        printf("Error al eliminar la clave 20 (Correcto).\n");
     }
 
     // 9. Comprobar que la clave ya no existe
