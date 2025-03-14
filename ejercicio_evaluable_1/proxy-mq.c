@@ -85,6 +85,14 @@ int destroy() {
  
 // Implementa q_set_value: inserta la tupla <key, value1, value2, value3>.
 int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
+    if (N_value2 < 1 || N_value2 > MAXVEC) {
+        printf("Error: El valor de N_value2 no es correcto.\n");
+        return -1; // Error: N_value2 fuera de rango
+    }
+    if (strlen(value1) > MAXSTR) {
+        printf("Error: La cadena excede los 255 caracteres permitidos.\n");
+        return -1;
+    }
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 2;  // Código para set_value
@@ -114,6 +122,14 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
  
 // Implementa q_modify_value: modifica la tupla asociada a 'key'.
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
+    if (N_value2 < 1 || N_value2 > MAXVEC) {
+        printf("Error: El valor de N_value2 no es correcto.\n");
+        return -1; // Error: N_value2 fuera de rango
+    }
+    if (strlen(value1) > MAXSTR) {
+        printf("Error: La cadena excede los 255 caracteres permitidos.\n");
+        return -1;
+    }
     struct message pr;
     memset(&pr, 0, sizeof(struct message));
     pr.op = 4;  // Código para modify_value

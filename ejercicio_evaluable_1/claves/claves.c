@@ -37,12 +37,12 @@ int exist(int key) {
         
         if (k == key) {
             fclose(f);
-            printf("Existe\n");
+            printf("La clave %d existe\n", key);
             return 1; // Existe
         }
     }
     fclose(f);
-    printf("No existe\n");
+    printf("La clave %d no existe\n", key);
     return 0; // No existe
 }
 
@@ -89,16 +89,14 @@ int delete_key(int key) {
     
     remove("data.txt");
     rename("temp.txt", "data.txt");
-    
+    printf("La clave %d se ha borrado correctamente\n", key);
     return 0; // Éxito
 }
 
 
 int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    if (N_value2 < 1 || N_value2 > MAXVEC) {
-        return -1; // Error: N_value2 fuera de rango
-    }
-    
+    printf("La clave %d se va a insertar\n", key);
+
     if (exist(key)) {
         return -1; // Error: clave ya existe
     }
@@ -114,7 +112,8 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     }
     fprintf(file, "%d %d\n", value3.x, value3.y);
     fclose(file);
-    
+    printf("La clave %d se ha insertado correctamente\n", key);
+
     return 0; // Éxito
 }
 
@@ -134,6 +133,7 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
         
         if (k == key) {
             fclose(file);
+            printf("La clave %d se ha obtenido correctamente\n", key);
             return 0; // Éxito
         }
     }
@@ -144,11 +144,13 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
 
 
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
+    printf("La clave %d se va a modificar\n", key);
     int exists = exist(key);
     if (exists == 0)
         return -1;
     // Borramos la key y la insertamos de nuevo con los nuevos valores
     delete_key(key);
-    set_value(key, value1, N_value2, V_value2, value3);    
+    set_value(key, value1, N_value2, V_value2, value3);
+    printf("La clave %d se ha modificado con éxito\n", key);    
     return 0;
 }
