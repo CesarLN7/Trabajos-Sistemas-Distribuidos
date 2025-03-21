@@ -1,5 +1,6 @@
 CC = gcc
 CLAVES_PATH = claves
+SOCKETS_PATH = sockets
 CFLAGS = -lrt
 OBJS = servidor cliente cliente2
 BIN_FILES = servidor cliente cliente2
@@ -9,10 +10,10 @@ all: $(OBJS)
 # Compilar la librería dinámica a partir de proxy-sock.c
 libclaves.so: proxy-sock.c
 	$(CC) -fPIC -c -o proxy-sock.o proxy-sock.c
-	$(CC) -shared -fPIC -o libclaves.so proxy-sock.o
+	$(CC) -shared -fPIC -o libclaves.so $(SOCKETS_PATH)/sockets.c proxy-sock.o
 
 # Compilar el servidor: utiliza servidor-sock.c y claves/claves.c
-servidor: servidor-sock.c $(CLAVES_PATH)/claves.c
+servidor: servidor-sock.c $(CLAVES_PATH)/claves.c $(SOCKETS_PATH)/sockets.c
 	$(CC) $(CFLAGS) $^ -o servidor.out
 
 # Compilar el cliente 1: se enlaza con libclaves.so para que use el proxy
