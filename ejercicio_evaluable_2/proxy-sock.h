@@ -1,5 +1,5 @@
-#ifndef _PROXY_MQ_H_
-#define _PROXY_MQ_H_
+#ifndef _PROXY_SOCK_H_
+#define _PROXY_SOCK_H_
 
 #include "claves/claves.h"  // Para tener la definición de struct Coord
 
