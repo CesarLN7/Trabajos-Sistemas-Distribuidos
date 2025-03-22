@@ -77,8 +77,14 @@ int destroy() {
 }
 
 int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    is_value1_valid(value1);
-    is_N_value2_valid(N_value2);
+    if (is_value1_valid(value1) == -1) {
+        return -1; // Error: value1 fuera de rango
+    };
+
+    if (is_N_value2_valid(N_value2) == -1) {
+        return -1; // Error: N_value2 fuera de rango
+    };
+    
     struct message msg = { .op = 2, .key = key, .N_value2 = N_value2, .value3 = value3 };
     strncpy(msg.value1, value1, MAXSTR);
     memcpy(msg.V_value2, V_value2, sizeof(double) * N_value2);
@@ -98,8 +104,14 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
 }
 
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    is_value1_valid(value1);
-    is_N_value2_valid(N_value2);
+    if (is_value1_valid(value1) == -1) {
+        return -1; // Error: value1 fuera de rango
+    };
+    
+    if (is_N_value2_valid(N_value2) == -1) {
+        return -1; // Error: N_value2 fuera de rango
+    };
+    
     struct message msg = { .op = 4, .key = key, .N_value2 = N_value2, .value3 = value3 };
     strncpy(msg.value1, value1, MAXSTR);
     memcpy(msg.V_value2, V_value2, sizeof(double) * N_value2);
