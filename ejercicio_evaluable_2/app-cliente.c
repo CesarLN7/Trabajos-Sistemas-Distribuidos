@@ -72,8 +72,10 @@ int main() {
     int exists = exist(key);
     if (exists == 0) {
         printf("La clave %d no existe (correcto).\n", key);
-    } else {
+    } else if (exists == 1) {
         printf("Error: la clave %d existe antes de ser insertada.\n", key);
+    } else {
+        printf("Error al comprobar la clave %d.\n", key);
     }
 
     // 3. Insertar la clave con set_value
@@ -118,35 +120,45 @@ int main() {
     int exists2 = exist(key);
     if (exists2 == 0) {
         printf("La clave %d no existe (Error).\n", key);
-    } else {
+    } else if (exists2 == 1) {
         printf("La clave %d existe (Correcto).\n", key);
+    } else {
+        printf("Error al comprobar la clave %d.\n", key);
     }
     int exists3 = exist(5);
     if (exists3 == 0) {
         printf("La clave 5 no existe (Correcto).\n");
-    } else {
+    } else if (exists3 == 1) {
         printf("La clave 5 existe (Error).\n");
+    } else {
+        printf("Error al comprobar la clave 5.\n");
     }
 
     int exists4 = exist(key1);
     if (exists4 == 0) {
         printf("La clave %d no existe (Error).\n", key1);
-    } else {
+    } else if (exists4 == 1) {
         printf("La clave %d existe (Correcto).\n", key1);
+    } else {
+        printf("Error al comprobar la clave %d.\n", key1);
     }
 
     int exists5 = exist(10);
     if (exists5 == 0) {
         printf("La clave 10 no existe (Correcto).\n");
-    } else {
+    } else if (exists5 == 1) {
         printf("La clave 10 existe (Error).\n");
+    } else {
+        printf("Error al comprobar la clave 10.\n");
     }
 
     int exists6 = exist(key2);
     if (exists6 == 0) {
         printf("La clave %d no existe (Error).\n", key2);
-    } else {
+    } else if (exists6 == 1) {
         printf("La clave %d existe (Correcto).\n", key2);
+    } else {
+        printf("Error al comprobar la clave %d.\n", key2);
     }
 
     // 5. Obtener los valores de la clave

@@ -8,8 +8,6 @@ int main() {
     int N_v2 = 3;
     struct Coord v3 = {20, 10};
 
-    destroy();
-
     printf("\n** Prueba Cliente 2: set_value **\n");
     if (set_value(key, v1, N_v2, v2, v3) == 0) {
         printf("Clave %d insertada correctamente.\n", key);
