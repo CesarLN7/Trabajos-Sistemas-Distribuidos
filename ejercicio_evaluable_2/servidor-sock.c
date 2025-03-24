@@ -15,7 +15,7 @@ int server_socket;
 
 void sigHandler(int signo) {
     close(server_socket);
-    printf("Servidor cerrado.\n");
+    printf("\nServidor cerrado.\n");
     exit(0);
 }
 

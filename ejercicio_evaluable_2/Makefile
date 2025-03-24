@@ -17,12 +17,12 @@ servidor: servidor-sock.c $(CLAVES_PATH)/claves.c $(SOCKETS_PATH)/sockets.c
 	$(CC) $(CFLAGS) $^ -o servidor.out
 
 # Compilar el cliente 1: se enlaza con libclaves.so para que use el proxy
-cliente: app-cliente.c libclaves.so
-	$(CC) $(CFLAGS) -o cliente.out app-cliente.c -L. -lclaves -lrt -Wl,-rpath,.
+cliente: app-cliente-1.c libclaves.so
+	$(CC) $(CFLAGS) -o cliente.out app-cliente-1.c -L. -lclaves -lrt -Wl,-rpath,.
 
 # Compilar el cliente 2: se enlaza con libclaves.so para que use el proxy
-cliente2: app-cliente2.c libclaves.so
-	$(CC) $(CFLAGS) -o cliente2.out app-cliente2.c -L. -lclaves -lrt -Wl,-rpath,.
+cliente2: app-cliente-2.c libclaves.so
+	$(CC) $(CFLAGS) -o cliente2.out app-cliente-2.c -L. -lclaves -lrt -Wl,-rpath,.
 
 clean:
 	rm -f $(BIN_FILES) *.out *.o *.so $(CLAVES_PATH)/*.o data.txt
