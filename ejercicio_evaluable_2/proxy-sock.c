@@ -8,6 +8,8 @@
 #include "mensaje.h"
 #include "sockets/sockets.h"
 
+char buffer_local[MAXSTR]; // buffer para almacenar mensajes
+
 // función para comprobar si la longitud de value1 es correcta
 int is_value1_valid(char *value1) {
     if (strlen(value1) > MAXSTR) {
@@ -24,19 +26,20 @@ int is_N_value2_valid(int N_value2) {
     }
 }
 
+// Función para conectar con el servidor
 int connect_to_server() {
-    int sock;
+    int ss;
     struct sockaddr_in server_addr;
     char *ip = getenv("IP_TUPLAS");
     char *port_str = getenv("PORT_TUPLAS");
     if (!ip || !port_str) {
         fprintf(stderr, "Variables de entorno IP_TUPLAS y PORT_TUPLAS no definidas.\n");
-        exit(1);
+        return -1;
     }
     int port = atoi(port_str);
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
+    ss = socket(AF_INET, SOCK_STREAM, 0);
+    if (ss < 0) {
         perror("Error al crear socket");
         return -1;
     }
@@ -45,85 +48,72 @@ int connect_to_server() {
     server_addr.sin_port = htons(port);
     inet_pton(AF_INET, ip, &server_addr.sin_addr);
 
-    if (connect(sock, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+    if (connect(ss, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
         perror("Error al conectar con el servidor");
         return -1;
     }
-    return sock;
+    return ss;
 }
 
-int send_request(struct message *msg) {
-    int sock = connect_to_server();
-    if (sock < 0) return -1;
+// REVISA EL FUNCIONAMIENTO DE AQUI PARA ABAJO TODO
+int send_request(char *request, char *response, size_t response_size) {
+    int ss = connect_to_server();
+    if (ss < 0) return -1;
 
-    if (send_message(sock, (char*)msg, sizeof(struct message)) < 0) {
-        perror("Error al enviar mensaje");
-        close(sock);
-        return -1;
-    }
+    send_message(ss, request, strlen(request) + 1);
+    readLine(ss, response, response_size);
 
-    if (receive_message(sock, (char*)msg, sizeof(struct message)) < 0) {
-        perror("Error al recibir respuesta");
-        close(sock);
-        return -1;
-    }
-    close(sock);
-    return msg->res;
+    close(ss);
+    return atoi(response);
 }
 
 int destroy() {
-    struct message msg = { .op = 1 };
-    return send_request(&msg);
+    return send_request("1", buffer_local, sizeof(buffer_local));
 }
 
 int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    if (is_value1_valid(value1) == -1) {
-        return -1; // Error: value1 fuera de rango
-    };
+    if (is_value1_valid(value1) == -1 || is_N_value2_valid(N_value2) == -1) {
+        return -1;
+    }
 
-    if (is_N_value2_valid(N_value2) == -1) {
-        return -1; // Error: N_value2 fuera de rango
-    };
+    char request[1024];
+    snprintf(request, sizeof(request), "2 %d %s %d %.6f %.6f", key, value1, N_value2, value3.x, value3.y);
     
-    struct message msg = { .op = 2, .key = key, .N_value2 = N_value2, .value3 = value3 };
-    strncpy(msg.value1, value1, MAXSTR);
-    memcpy(msg.V_value2, V_value2, sizeof(double) * N_value2);
-    return send_request(&msg);
+    return send_request(request, buffer_local, sizeof(buffer_local));
 }
 
 int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
-    struct message msg = { .op = 3, .key = key };
-    int res = send_request(&msg);
-    if (res == 0) {
-        strncpy(value1, msg.value1, MAXSTR);
-        *N_value2 = msg.N_value2;
-        memcpy(V_value2, msg.V_value2, sizeof(double) * (*N_value2));
-        *value3 = msg.value3;
-    }
-    return res;
+    char request[32];
+    snprintf(request, sizeof(request), "3 %d", key);
+
+    char response[1024];
+    if (send_request(request, response, sizeof(response)) < 0) return -1;
+
+    sscanf(response, "%s %d %lf %lf", value1, N_value2, &value3->x, &value3->y); // Esto está mal porque V_value2 no lo printea !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    return 0;
 }
 
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    if (is_value1_valid(value1) == -1) {
-        return -1; // Error: value1 fuera de rango
-    };
-    
-    if (is_N_value2_valid(N_value2) == -1) {
-        return -1; // Error: N_value2 fuera de rango
-    };
-    
-    struct message msg = { .op = 4, .key = key, .N_value2 = N_value2, .value3 = value3 };
-    strncpy(msg.value1, value1, MAXSTR);
-    memcpy(msg.V_value2, V_value2, sizeof(double) * N_value2);
-    return send_request(&msg);
+    if (is_value1_valid(value1) == -1 || is_N_value2_valid(N_value2) == -1) {
+        return -1;
+    }
+
+    char request[1024];
+    snprintf(request, sizeof(request), "4 %d %s %d %.6f %.6f", key, value1, N_value2, value3.x, value3.y);
+
+    return send_request(request, buffer_local, sizeof(buffer_local));
 }
 
 int delete_key(int key) {
-    struct message msg = { .op = 5, .key = key };
-    return send_request(&msg);
+    char request[32];
+    snprintf(request, sizeof(request), "5 %d", key);
+
+    return send_request(request, buffer_local, sizeof(buffer_local));
 }
 
 int exist(int key) {
-    struct message msg = { .op = 6, .key = key };
-    return send_request(&msg);
+    char request[32];
+    snprintf(request, sizeof(request), "6 %d", key);
+    
+    return send_request(request, buffer_local, sizeof(buffer_local));
 }

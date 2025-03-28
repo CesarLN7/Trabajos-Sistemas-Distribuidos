@@ -8,7 +8,7 @@
 
 struct message {
     int op;                     // Código de operación (1: destroy, 2: set_value, 3: get_value, 4: modify_value, 5: delete_key, 6: exist)
-    char q_name[MAXSTR];        // Nombre de la cola del cliente (para enviar la respuesta)
+    char sock_name[MAXSTR];        // Nombre del socket del cliente (para enviar la respuesta)
     int key;                    
     char value1[MAXSTR];        
     int N_value2;               
