@@ -58,13 +58,90 @@ void tratar_peticion(void *sc) {
                     send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
                     break;
             case 2: // SET VALUE
-                    res = set_value(pr.key, pr.value1, pr.N_value2, pr.V_value2, pr.value3); // FALTAN ESTAS TRES FUNCIONES POR AJUSTAR
+                    readLine(s_local, buffer_local, MAXSTR);
+                    key = atoi(buffer_local);
+            
+                    // Leemos value1
+                    readLine(s_local, buffer_local, MAXSTR);
+                    strcpy(value1, buffer_local);
+            
+                    // Leemos N_value2
+                    readLine(s_local, buffer_local, MAXSTR);
+                    N_value2 = atoi(buffer_local);
+            
+                    // Leemos V_value2
+                    for (int i = 0; i < N_value2; i++) {
+                        readLine(s_local, buffer_local, MAXSTR);
+                        V_value2[i] = atof(buffer_local);
+                    }
+
+                    // Leemos value3
+                    readLine(s_local, buffer_local, MAXSTR);   
+                    value3.x = atoi(buffer_local);
+                    readLine(s_local, buffer_local, MAXSTR);
+                    value3.y = atoi(buffer_local);
+
+                    res = set_value(key, value1, N_value2, V_value2, value3);
+                    sprintf(buffer_local, "%i", res);
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
                     break;
             case 3: // GET VALUE
-                    res = get_value(pr.key, pr.value1, &pr.N_value2, pr.V_value2, &pr.value3);
+                    readLine(s_local, buffer_local, MAXSTR);
+                    key = atoi(buffer_local);
+
+                    res = get_value(key, value1, &N_value2, V_value2, &value3);
+                    
+                    // Escribimos value1
+                    strcpy(buffer_local, value1);
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+
+                    // Escribimos N_value2
+                    sprintf(buffer_local, "%i", N_value2);
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+
+                    // Escribimos V_value2
+                    for (int i = 0; i < N_value2; i++) {
+                        sprintf(buffer_local, "%lf", V_value2[i]);
+                        send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    }
+
+                    // Escribimos value3
+                    sprintf(buffer_local, "%i", value3.x);  
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    sprintf(buffer_local, "%i", value3.y);
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+
+                    // Escribimos res
+                    sprintf(buffer_local, "%i", res);
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
                     break;
             case 4: // MODIFY VALUE
-                    res = modify_value(pr.key, pr.value1, pr.N_value2, pr.V_value2, pr.value3); // HASTA AQUÍ
+                    readLine(s_local, buffer_local, MAXSTR);
+                    key = atoi(buffer_local);
+            
+                    // Leemos value1
+                    readLine(s_local, buffer_local, MAXSTR);
+                    strcpy(value1, buffer_local);
+            
+                    // Leemos N_value2
+                    readLine(s_local, buffer_local, MAXSTR);
+                    N_value2 = atoi(buffer_local);
+            
+                    // Leemos V_value2
+                    for (int i = 0; i < N_value2; i++) {
+                        readLine(s_local, buffer_local, MAXSTR);
+                        V_value2[i] = atof(buffer_local);
+                    }
+
+                    // Leemos value3
+                    readLine(s_local, buffer_local, MAXSTR);   
+                    value3.x = atoi(buffer_local);
+                    readLine(s_local, buffer_local, MAXSTR);
+                    value3.y = atoi(buffer_local);
+
+                    res = modify_value(key, value1, N_value2, V_value2, value3);
+                    sprintf(buffer_local, "%i", res);
+                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
                     break;
             case 5: // DELETE KEY
                     readLine(s_local, buffer_local, MAXSTR);

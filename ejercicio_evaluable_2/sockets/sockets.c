@@ -32,7 +32,7 @@ int receive_message(int socket, char *buffer, int len) {
 		return(0);	/* se han recibido del socket len bytes al buffer */
 }
 
-ssize_t read_line(int fd, void *buffer, size_t n)
+ssize_t readLine(int fd, void *buffer, size_t n)
 {
 	ssize_t number_read;  /* número de bytes recuperados por el último read() */
 	size_t total_read;	  /* bytes leídos en total */
