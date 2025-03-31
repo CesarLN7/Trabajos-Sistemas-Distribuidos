@@ -122,9 +122,29 @@ int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coo
     send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
 
     // Leemos value1 del servidor
-    
-    readLine(ss, cadena_a_entero, MAXSTR);
+    readLine(ss, entero_a_cadena, 2);
     strcpy(value1, entero_a_cadena);
+
+    // Leemos N_value2 del servidor
+    readLine(ss, entero_a_cadena, 2);
+    *N_value2 = atoi(entero_a_cadena);
+
+    // Leemos V_value2 del servidor
+    for (int i = 0; i < *N_value2; i++) {
+        readLine(ss, entero_a_cadena, 2);
+        V_value2[i] = atof(entero_a_cadena);
+    }
+
+    // Leemos value3 del servidor
+    readLine(ss, entero_a_cadena, 2);
+    value3->x = atoi(entero_a_cadena);
+    readLine(ss, entero_a_cadena, 2);
+    value3->y = atoi(entero_a_cadena);
+
+    // Leemos el resultado del servidor
+    char res[MAXSTR];
+    readLine(ss, res, MAXSTR);
+    return atoi(res);
 
 }
 
