@@ -2,8 +2,8 @@ CC = gcc
 CLAVES_PATH = claves
 SOCKETS_PATH = sockets
 CFLAGS = -lrt
-OBJS = servidor cliente cliente2
-BIN_FILES = servidor cliente cliente2
+OBJS = servidor cliente1 cliente2 cliente3 cliente4
+BIN_FILES = servidor cliente1 cliente2 cliente3 cliente4
 
 all: $(OBJS)
 
@@ -17,16 +17,23 @@ servidor: servidor-sock.c $(CLAVES_PATH)/claves.c $(SOCKETS_PATH)/sockets.c
 	$(CC) $(CFLAGS) $^ -o servidor.out
 
 # Compilar el cliente 1: se enlaza con libclaves.so para que use el proxy
-cliente: app-cliente-1.c libclaves.so
-	$(CC) $(CFLAGS) -o cliente.out app-cliente-1.c -L. -lclaves -lrt -Wl,-rpath,.
+cliente1: app-cliente-1.c libclaves.so
+	$(CC) $(CFLAGS) -o cliente1.out app-cliente-1.c -L. -lclaves -lrt -Wl,-rpath,.
 
 # Compilar el cliente 2: se enlaza con libclaves.so para que use el proxy
 cliente2: app-cliente-2.c libclaves.so
 	$(CC) $(CFLAGS) -o cliente2.out app-cliente-2.c -L. -lclaves -lrt -Wl,-rpath,.
+
+cliente3: app-cliente-3.c libclaves.so
+	$(CC) $(CFLAGS) -o cliente3.out app-cliente-3.c -L. -lclaves -lrt -Wl,-rpath,.
+
+# Compilar el cliente 2: se enlaza con libclaves.so para que use el proxy
+cliente4: app-cliente-4.c libclaves.so
+	$(CC) $(CFLAGS) -o cliente4.out app-cliente-4.c -L. -lclaves -lrt -Wl,-rpath,.
 
 clean:
 	rm -f $(BIN_FILES) *.out *.o *.so $(CLAVES_PATH)/*.o data.txt
 
 re: clean all
 
-.PHONY: all libclaves.so servidor cliente cliente2 clean re
+.PHONY: all libclaves.so servidor cliente1 cliente2 cliente3 cliente4 clean re
