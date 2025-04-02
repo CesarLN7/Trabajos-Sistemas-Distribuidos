@@ -16,7 +16,7 @@
 #define MAX_CLIENTS 10
 
 pthread_mutex_t mutex_socket;
-int socket_libre = true;
+int socket_ocupado = false;
 pthread_cond_t cond_socket;
 
 int ss = 54321;
@@ -44,7 +44,7 @@ void tratar_peticion(void *sc) {
     pthread_mutex_lock(&mutex_socket);
     s_local = (* (int *)sc);
     free(sc);
-    socket_libre = false;
+    socket_ocupado = false;
     pthread_cond_signal(&cond_socket);
     pthread_mutex_unlock(&mutex_socket);
     
@@ -241,11 +241,11 @@ int main(int argc, char *argv[]) {
         *sc_ptr = sc;
         pthread_create(&thid, &t_attr, (void*)tratar_peticion, (void*)sc_ptr);
         pthread_mutex_lock(&mutex_socket);
-        while (socket_libre == true) {
+        while (socket_ocupado == true) {
             printf("Esperando a que se libere el socket...\n");
             pthread_cond_wait(&cond_socket, &mutex_socket);
         }
-        socket_libre = true;
+        socket_ocupado = true;
         pthread_mutex_unlock(&mutex_socket);
     }
     close(ss);
