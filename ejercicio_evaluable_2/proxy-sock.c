@@ -74,52 +74,55 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
     }
 
     int ss = connect_to_server();
-    if (ss < 0) return -1;
+    if (ss < 0) {
+        perror("Error al conectar con el servidor");
+        return -1;
+    }
 
     char op[] = "2";
-    send_message(ss, op, 2);
+    send_message(ss, op, strlen(op) + 1);
 
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
     sprintf(entero_a_cadena, "%d", key);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     // Enviamos value1 al servidor
-    send_message(ss, value1, sizeof(value1) + 1);
+    send_message(ss, value1, strlen(value1) + 1);
 
     // Enviamos N_value2 al servidor
     sprintf(entero_a_cadena, "%d", N_value2);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     // Enviamos V_value2 al servidor
     for (int i = 0; i < N_value2; i++) {
         sprintf(entero_a_cadena, "%lf", V_value2[i]);
-        send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+        send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
     }
 
     // Enviamos value3 al servidor
     sprintf(entero_a_cadena, "%d", value3.x);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
     sprintf(entero_a_cadena, "%d", value3.y);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     char res[MAXSTR];
     readLine(ss, res, MAXSTR);
     return atoi(res);
-
 }
+
 
 int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
     int ss = connect_to_server();
     if (ss < 0) return -1;
 
     char op[] = "3";
-    send_message(ss, op, 2);
+    send_message(ss, op, strlen(op) + 1);
 
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
     sprintf(entero_a_cadena, "%d", key);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     // Leemos value1 del servidor
     readLine(ss, entero_a_cadena, MAXSTR);
@@ -162,26 +165,26 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
     sprintf(entero_a_cadena, "%d", key);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     // Enviamos value1 al servidor
-    send_message(ss, value1, sizeof(value1) + 1);
+    send_message(ss, value1, strlen(value1) + 1);
 
     // Enviamos N_value2 al servidor
     sprintf(entero_a_cadena, "%d", N_value2);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     // Enviamos V_value2 al servidor
     for (int i = 0; i < N_value2; i++) {
         sprintf(entero_a_cadena, "%lf", V_value2[i]);
-        send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+        send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
     }
 
     // Enviamos value3 al servidor
     sprintf(entero_a_cadena, "%d", value3.x);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
     sprintf(entero_a_cadena, "%d", value3.y);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     char res[MAXSTR];
     readLine(ss, res, MAXSTR);
@@ -199,7 +202,7 @@ int delete_key(int key) {
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
     sprintf(entero_a_cadena, "%d", key);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
 
     char res[MAXSTR];
     readLine(ss, res, MAXSTR);
@@ -216,7 +219,7 @@ int exist(int key) {
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
     sprintf(entero_a_cadena, "%d", key);
-    send_message(ss, entero_a_cadena, sizeof(entero_a_cadena) + 1);
+    send_message(ss, entero_a_cadena, strlen(entero_a_cadena) + 1);
     
     char res[MAXSTR];
     readLine(ss, res, MAXSTR);

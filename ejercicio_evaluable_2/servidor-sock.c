@@ -43,6 +43,7 @@ void tratar_peticion(void *sc) {
 
     pthread_mutex_lock(&mutex_socket);
     s_local = (* (int *)sc);
+    free(sc);
     socket_libre = false;
     pthread_cond_signal(&cond_socket);
     pthread_mutex_unlock(&mutex_socket);
@@ -55,7 +56,7 @@ void tratar_peticion(void *sc) {
             case 1: // DESTROY
                     res = destroy();
                     sprintf(buffer_local, "%i", res);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     break;
             case 2: // SET VALUE
                     readLine(s_local, buffer_local, MAXSTR);
@@ -83,7 +84,7 @@ void tratar_peticion(void *sc) {
 
                     res = set_value(key, value1, N_value2, V_value2, value3);
                     sprintf(buffer_local, "%i", res);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     break;
             case 3: // GET VALUE
                     readLine(s_local, buffer_local, MAXSTR);
@@ -93,27 +94,27 @@ void tratar_peticion(void *sc) {
                     
                     // Escribimos value1
                     strcpy(buffer_local, value1);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
 
                     // Escribimos N_value2
                     sprintf(buffer_local, "%i", N_value2);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
 
                     // Escribimos V_value2
                     for (int i = 0; i < N_value2; i++) {
                         sprintf(buffer_local, "%lf", V_value2[i]);
-                        send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                        send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     }
 
                     // Escribimos value3
                     sprintf(buffer_local, "%i", value3.x);  
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     sprintf(buffer_local, "%i", value3.y);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
 
                     // Escribimos res
                     sprintf(buffer_local, "%i", res);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     break;
             case 4: // MODIFY VALUE
                     readLine(s_local, buffer_local, MAXSTR);
@@ -141,21 +142,21 @@ void tratar_peticion(void *sc) {
 
                     res = modify_value(key, value1, N_value2, V_value2, value3);
                     sprintf(buffer_local, "%i", res);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     break;
             case 5: // DELETE KEY
                     readLine(s_local, buffer_local, MAXSTR);
                     key = atoi(buffer_local);
                     res = delete_key(key);
                     sprintf(buffer_local, "%i", res);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     break;
             case 6: // EXIST
                     readLine(s_local, buffer_local, MAXSTR);
                     key = atoi(buffer_local);
                     res = exist(key);
                     sprintf(buffer_local, "%i", res);
-                    send_message(s_local, buffer_local, sizeof(buffer_local) + 1);
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                     break;
             default: // Operación desconocida.
                     res = -1;
@@ -217,6 +218,7 @@ int main(int argc, char *argv[]) {
         printf("esperando conexion...\n");
 
         size = sizeof(client_addr);
+        // poner un trace
         sc = accept(ss, (struct sockaddr*)&client_addr, (socklen_t*)&size);
 
         printf("conexión aceptada de IP: %s y puerto: %d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
@@ -231,16 +233,22 @@ int main(int argc, char *argv[]) {
 
         pthread_attr_init(&t_attr);
         pthread_attr_setdetachstate(&t_attr, PTHREAD_CREATE_DETACHED);
-        pthread_create(&thid, &t_attr, (void*)tratar_peticion, (void*)&sc);
+        int *sc_ptr = malloc(sizeof(int));
+        if (sc_ptr == NULL) {
+            perror("Error al asignar memoria");
+            continue;
+        }
+        *sc_ptr = sc;
+        pthread_create(&thid, &t_attr, (void*)tratar_peticion, (void*)sc_ptr);
         pthread_mutex_lock(&mutex_socket);
-        while (socket_libre == false) {
+        while (socket_libre == true) {
             printf("Esperando a que se libere el socket...\n");
             pthread_cond_wait(&cond_socket, &mutex_socket);
         }
         socket_libre = true;
         pthread_mutex_unlock(&mutex_socket);
     }
-    close (ss);
+    close(ss);
     printf("The End.\n");
     return 0;
 } /*fin main */

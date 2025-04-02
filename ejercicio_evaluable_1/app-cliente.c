@@ -10,7 +10,7 @@ int main() {
 
     int key1 = 2, key2 = 3, key3 = 4, key4 = 5, key5 = 6;
     char v1_set1[] = "distribuidos";
-    double v2_set1[] = {2.3, 0.5, 23.45, 13.13, 33,33};
+    double v2_set1[] = {2.3, 0.5, 23.45, 13.13, 33.33};
     int N_v2_set1 = 5;
     struct Coord v3_set1 = {23, 33};
     

@@ -119,6 +119,10 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
 
 
 int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
+    int exists = exist(key);
+    if (exists == 0)
+        return -1;
+        
     FILE *file = fopen("data.txt", "r");
     if (file == NULL) {
         return -1; // Error al abrir el archivo
