@@ -60,7 +60,7 @@ int destroy() {
     if (ss < 0) return -1;
 
     char op[] = "1"; // Mandamos así el código de operación para que incluya el '\0' al final de la cadena
-    send_message(ss, op, 2);
+    send_message(ss, op, strlen(op) + 1);
 
     char res[MAXSTR];
     readLine(ss, res, MAXSTR);
@@ -160,7 +160,7 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
     if (ss < 0) return -1;
 
     char op[] = "4";
-    send_message(ss, op, 2);
+    send_message(ss, op, strlen(op) + 1);
 
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
@@ -197,7 +197,7 @@ int delete_key(int key) {
     if (ss < 0) return -1;
 
     char op[] = "5";
-    send_message(ss, op, 2);
+    send_message(ss, op, strlen(op) + 1);
     
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
@@ -214,7 +214,7 @@ int exist(int key) {
     if (ss < 0) return -1;
 
     char op[] = "6"; 
-    send_message(ss, op, 2);
+    send_message(ss, op, strlen(op) + 1);
 
     // Enviamos la clave al servidor
     char entero_a_cadena[MAXSTR];
