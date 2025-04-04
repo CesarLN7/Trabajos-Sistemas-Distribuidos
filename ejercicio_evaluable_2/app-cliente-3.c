@@ -2,24 +2,79 @@
 #include "claves/claves.h"
 
 int main() {
-    int key = 2;
-    char v1[] = "distribuidos";
-    double v2[] = {3.1, 6.2, 9.3};
-    int N_v2 = 3;
-    struct Coord v3 = {20, 10};
+    int key_client2 = 100;
+    
+    char v1_client2[] = "cliente3";
+    double v2_client2[] = {1.1, 2.2, 3.3};
+    int N_v2_client2 = 3;
+    struct Coord v3_client2 = {5, 10};
 
-    printf("\n** Prueba Cliente 2: set_value **\n");
-    if (set_value(key, v1, N_v2, v2, v3) == 0) {
-        printf("Clave %d insertada correctamente.\n", key);
-    } else {
-        printf("Error al insertar la clave %d.\n", key);
-    }
+    char v1_get[256];
+    double v2_get[32];
+    int N_v2_get;
+    struct Coord v3_get;
 
-    printf("\n** Prueba Cliente 2: delete_key **\n");
-    if (delete_key(key) == 0) {
-        printf("Clave %d eliminada correctamente.\n", key);
+    // 1. Comprobar que la clave no existe
+    printf("\n** Prueba: exist() antes de set_value **\n");
+    int exists = exist(key_client2);
+    if (exists == 0) {
+        printf("La clave %d no existe (error).\n", key_client2);
+    } else if (exists == 1) {
+        printf("Error: la clave %d existe antes de ser insertada(correcto).\n", key_client2);
     } else {
-        printf("Error al eliminar la clave %d.\n", key);
+        printf("Error al comprobar la clave %d.\n", key_client2);
     }
+    
+    // 2. Insertar valores con set_value
+    printf("\n** Prueba: set_value() **\n");
+    if (set_value(key_client2, v1_client2, N_v2_client2, v2_client2, v3_client2) == 0) {
+        printf("Clave %d insertada correctamente.\n", key_client2);
+    } else {
+        printf("Error al insertar la clave %d.\n", key_client2);
+    }
+ 
+    
+    // 3. Obtener valores con get_value
+    printf("\n** Prueba: get_value() **\n");
+    if (get_value(key_client2, v1_get, &N_v2_get, v2_get, &v3_get) == 0) {
+        printf("Clave %d recuperada después de modificar.\n", key_client2);
+        printf("   - value1: %s\n", v1_get);
+        printf("   - N_value2: %d\n", N_v2_get);
+        printf("   - V_value2: ");
+        for (int i = 0; i < N_v2_get; i++) {
+            printf("%lf ", v2_get[i]);
+        }
+        printf("\n   - value3: (%d, %d)\n", v3_get.x, v3_get.y);
+    } else {
+        printf("Error al recuperar la clave %d.\n", key_client2);
+    }
+    
+    // 4. Modificar valores con modify_value
+    printf("\n** Prueba: modify_value() **\n");
+    char v1_mod[] = "modificado_cliente3";
+    double v2_mod[] = {10.10, 11.11, 12.12};
+    int N_v2_mod = 3;
+    struct Coord v3_mod = {35, 40};
+    if (modify_value(key_client2, v1_mod, N_v2_mod, v2_mod, v3_mod) == 0) {
+        printf("Clave %d modificada correctamente.\n", key_client2);
+    } else {
+        printf("Error al modificar la clave %d.\n", key_client2);
+    }
+    
+    // 5. Obtener valores modificados con get_value
+    printf("\n** Prueba: get_value() después de modify_value **\n");
+    if (get_value(key_client2, v1_get, &N_v2_get, v2_get, &v3_get) == 0) {
+        printf("Clave %d recuperada después de modificar.\n", key_client2);
+        printf("   - value1: %s\n", v1_get);
+        printf("   - N_value2: %d\n", N_v2_get);
+        printf("   - V_value2: ");
+        for (int i = 0; i < N_v2_get; i++) {
+            printf("%lf ", v2_get[i]);
+        }
+        printf("\n   - value3: (%d, %d)\n", v3_get.x, v3_get.y);
+    } else {
+        printf("Error al recuperar la clave %d después de modificar.\n", key_client2);
+    }
+    
     return 0;
 }
