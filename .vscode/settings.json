@@ -4,6 +4,7 @@
         "fcntl.h": "c",
         "unistd.h": "c",
         "mensaje.h": "c",
-        "sockets.h": "c"
+        "sockets.h": "c",
+        "claves-rpc.h": "c"
     }
 }

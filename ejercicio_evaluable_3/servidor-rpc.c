@@ -4,16 +4,23 @@
  * as a guideline for developing your own functions.
  */
 
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
 #include "claves-rpc.h"
+#include "mensaje.h"
+#include "claves/claves.h"
 
 bool_t
 rpc_destroy_1_svc(int *result, struct svc_req *rqstp)
 {
 	bool_t retval;
 
-	/*
-	 * insert server code here
-	 */
+	*result = destroy();
 
 	return retval;
 }
@@ -23,9 +30,7 @@ rpc_set_value_1_svc(int key, struct args_in arg2, int *result,  struct svc_req *
 {
 	bool_t retval;
 
-	/*
-	 * insert server code here
-	 */
+	*result = set_value(key, arg2.value1, arg2.N_value2, arg2.V_value2, arg2.value3);
 
 	return retval;
 }
@@ -35,9 +40,7 @@ rpc_get_value_1_svc(int key, struct args_out *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
-	/*
-	 * insert server code here
-	 */
+	result.res = get_value(key, result.value1, &(result.N_value2), result.V_value2, result.value3);
 
 	return retval;
 }
@@ -47,9 +50,7 @@ rpc_modify_value_1_svc(int key, struct args_in arg2, int *result,  struct svc_re
 {
 	bool_t retval;
 
-	/*
-	 * insert server code here
-	 */
+	*result = modify_value(key, arg2.value1, arg2.N_value2, arg2.V_value2, arg2.value3);
 
 	return retval;
 }
@@ -59,9 +60,7 @@ rpc_delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
-	/*
-	 * insert server code here
-	 */
+	*result = delete_key(key);
 
 	return retval;
 }
@@ -71,9 +70,7 @@ rpc_exist_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 
-	/*
-	 * insert server code here
-	 */
+	*result = exist(key);
 
 	return retval;
 }
