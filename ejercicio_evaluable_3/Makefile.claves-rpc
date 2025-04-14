@@ -3,8 +3,8 @@
 
 # Parameters
 
-CLIENT = claves-rpc_client
-SERVER = claves-rpc_server
+CLIENT = proxy-rpc
+SERVER = servidor-rpc
 
 SOURCES_CLNT.c = 
 SOURCES_CLNT.h = 
@@ -14,7 +14,7 @@ SOURCES.x = claves-rpc.x
 
 TARGETS_SVC.c = claves-rpc_svc.c claves-rpc_server.c claves-rpc_xdr.c 
 TARGETS_CLNT.c = claves-rpc_clnt.c claves-rpc_client.c claves-rpc_xdr.c 
-TARGETS = claves-rpc.h claves-rpc_xdr.c claves-rpc_clnt.c claves-rpc_svc.c claves-rpc_client.c claves-rpc_server.c
+TARGETS = claves-rpc.h claves-rpc_xdr.c claves-rpc_clnt.c claves-rpc_svc.c proxy-rpc.c servidor-rpc.c
 
 OBJECTS_CLNT = $(SOURCES_CLNT.c:%.c=%.o) $(TARGETS_CLNT.c:%.c=%.o)
 OBJECTS_SVC = $(SOURCES_SVC.c:%.c=%.o) $(TARGETS_SVC.c:%.c=%.o)
@@ -44,4 +44,3 @@ $(SERVER) : $(OBJECTS_SVC)
 
  clean:
 	 $(RM) core $(TARGETS) $(OBJECTS_CLNT) $(OBJECTS_SVC) $(CLIENT) $(SERVER)
-

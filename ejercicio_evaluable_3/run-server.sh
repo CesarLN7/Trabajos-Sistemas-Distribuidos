@@ -1,4 +1,4 @@
 #!/bin/bash
 
 make re
-./servidor.out 8080
+./servidor.out

@@ -4,11 +4,13 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "proxy-sock.h"
+#include "proxy-rpc.h"
 #include "mensaje.h"
 #include "sockets/sockets.h"
 
-char buffer_local[MAXSTR]; // buffer para almacenar mensajes
+#define SERVER_PORT "tcp"
+
+CLIENT *clnt = NULL;
 
 // función para comprobar si la longitud de value1 es correcta
 int is_value1_valid(char *value1) {
@@ -26,46 +28,48 @@ int is_N_value2_valid(int N_value2) {
     }
 }
 
-// Función para conectar con el servidor
+// Función para conseguir la ip del servidor
+char* get_ip() {
+    char* ip = getenv("IP_TUPLAS");
+    if (ip == NULL) {
+        perror("NOT setted ip");
+        return NULL;
+    }
+    return ip;
+}
+
+// Conexión con el servidor
 int connect_to_server() {
-    int sc;
-    struct sockaddr_in server_addr;
-    char *ip = getenv("IP_TUPLAS");
-    char *port_str = getenv("PORT_TUPLAS");
-    if (!ip || !port_str) {
-        fprintf(stderr, "Variables de entorno IP_TUPLAS y PORT_TUPLAS no definidas.\n");
-        return -1;
-    }
-    int port = atoi(port_str);
+    if (clnt == NULL) {
+        char* ip = get_ip();
+        if (ip == NULL) return -1;
 
-    sc = socket(AF_INET, SOCK_STREAM, 0);
-    if (sc < 0) {
-        perror("Error al crear socket");
-        return -1;
+        clnt = clnt_create(ip, INTERFAZ, FUNCIONESVER, SERVER_PORT);
+        if (clnt == NULL) {
+            clnt_pcreateerror("Error al crear el cliente RPC");
+            return -1;
+        }
     }
+    return 0;
+}
 
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(port);
-    inet_pton(AF_INET, ip, &server_addr.sin_addr);
-
-    if (connect(sc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Error al conectar con el servidor");
-        return -1;
+void disconnect_from_server() {
+    if (clnt != NULL) {
+        clnt_destroy(clnt);
+        clnt = NULL;
     }
-    return sc;
 }
 
 int destroy() {
-    int sc = connect_to_server();
-    if (sc < 0) return -1;
+    if (connect_to_server() < 0) return -1;
 
-    char op[] = "1"; // Mandamos así el código de operación para que incluya el '\0' al final de la cadena
-    send_message(sc, op, strlen(op) + 1);
+    int result;
+    if (rpc_destroy_1(&result, clnt) != RPC_SUCCESS) {
+        clnt_perror(clnt, "Error en destroy()");
+        return -1;
+    }
 
-    char res[MAXSTR];
-    readLine(sc, res, MAXSTR);
-    return atoi(res);
-
+    return result;
 }
 
 int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
@@ -73,82 +77,42 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
         return -1;
     }
 
-    int sc = connect_to_server();
-    if (sc < 0) {
-        perror("Error al conectar con el servidor");
+    if (connect_to_server() < 0) return -1;
+
+    struct args_in args;
+    strncpy(args.value1, value1, MAXSTR);
+    args.N_value2 = N_value2;
+    memcpy(args.V_value2, V_value2, sizeof(double) * N_value2);
+    args.value3 = value3;
+
+    int result;
+    if (rpc_set_value_1(key, args, &result, clnt) != RPC_SUCCESS) {
+        clnt_perror(clnt, "Error en set_value()");
         return -1;
     }
 
-    char op[] = "2";
-    send_message(sc, op, strlen(op) + 1);
+    return result;
 
-    // Enviamos la clave al servidor
-    char entero_a_cadena[MAXSTR];
-    sprintf(entero_a_cadena, "%d", key);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    // Enviamos value1 al servidor
-    send_message(sc, value1, strlen(value1) + 1);
-
-    // Enviamos N_value2 al servidor
-    sprintf(entero_a_cadena, "%d", N_value2);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    // Enviamos V_value2 al servidor
-    for (int i = 0; i < N_value2; i++) {
-        sprintf(entero_a_cadena, "%lf", V_value2[i]);
-        send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-    }
-
-    // Enviamos value3 al servidor
-    sprintf(entero_a_cadena, "%d", value3.x);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-    sprintf(entero_a_cadena, "%d", value3.y);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    char res[MAXSTR];
-    readLine(sc, res, MAXSTR);
-    return atoi(res);
 }
 
 
 int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
-    int sc = connect_to_server();
-    if (sc < 0) return -1;
+    if (connect_to_server() < 0) return -1;
 
-    char op[] = "3";
-    send_message(sc, op, strlen(op) + 1);
+    struct args_out result;
+    memset(&result, 0, sizeof(result));
 
-    // Enviamos la clave al servidor
-    char entero_a_cadena[MAXSTR];
-    sprintf(entero_a_cadena, "%d", key);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    // Leemos value1 del servidor
-    readLine(sc, entero_a_cadena, MAXSTR);
-    strcpy(value1, entero_a_cadena);
-
-    // Leemos N_value2 del servidor
-    readLine(sc, entero_a_cadena, MAXSTR);
-    *N_value2 = atoi(entero_a_cadena);
-
-    // Leemos V_value2 del servidor
-    for (int i = 0; i < *N_value2; i++) {
-        readLine(sc, entero_a_cadena, MAXSTR);
-        V_value2[i] = atof(entero_a_cadena);
+    if (rpc_get_value_1(key, &result, clnt) != RPC_SUCCESS) {
+        clnt_perror(clnt, "Error en get_value()");
+        return -1;
     }
 
-    // Leemos value3 del servidor
-    readLine(sc, entero_a_cadena, MAXSTR);
-    value3->x = atoi(entero_a_cadena);
-    readLine(sc, entero_a_cadena, MAXSTR);
-    value3->y = atoi(entero_a_cadena);
+    strncpy(value1, result.value1, MAXSTR);
+    *N_value2 = result.N_value2;
+    memcpy(V_value2, result.V_value2, sizeof(double) * (*N_value2));
+    *value3 = result.value3;
 
-    // Leemos el resultado del servidor
-    char res[MAXSTR];
-    readLine(sc, res, MAXSTR);
-    return atoi(res);
-
+    return result.res;
 }
 
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
@@ -156,73 +120,41 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
         return -1;
     }
 
-    int sc = connect_to_server();
-    if (sc < 0) return -1;
+    if (connect_to_server() < 0) return -1;
 
-    char op[] = "4";
-    send_message(sc, op, strlen(op) + 1);
+    struct args_in args;
+    strncpy(args.value1, value1, MAXSTR);
+    args.N_value2 = N_value2;
+    memcpy(args.V_value2, V_value2, sizeof(double) * N_value2);
+    args.value3 = value3;
 
-    // Enviamos la clave al servidor
-    char entero_a_cadena[MAXSTR];
-    sprintf(entero_a_cadena, "%d", key);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    // Enviamos value1 al servidor
-    send_message(sc, value1, strlen(value1) + 1);
-
-    // Enviamos N_value2 al servidor
-    sprintf(entero_a_cadena, "%d", N_value2);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    // Enviamos V_value2 al servidor
-    for (int i = 0; i < N_value2; i++) {
-        sprintf(entero_a_cadena, "%lf", V_value2[i]);
-        send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
+    int result;
+    if (rpc_modify_value_1(key, args, &result, clnt) != RPC_SUCCESS) {
+        clnt_perror(clnt, "Error en modify_value()");
+        return -1;
     }
+    return result;
 
-    // Enviamos value3 al servidor
-    sprintf(entero_a_cadena, "%d", value3.x);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-    sprintf(entero_a_cadena, "%d", value3.y);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    char res[MAXSTR];
-    readLine(sc, res, MAXSTR);
-    return atoi(res);
-    
 }
 
 int delete_key(int key) {
-    int sc = connect_to_server();
-    if (sc < 0) return -1;
+    if (connect_to_server() < 0) return -1;
 
-    char op[] = "5";
-    send_message(sc, op, strlen(op) + 1);
-    
-    // Enviamos la clave al servidor
-    char entero_a_cadena[MAXSTR];
-    sprintf(entero_a_cadena, "%d", key);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-
-    char res[MAXSTR];
-    readLine(sc, res, MAXSTR);
-    return atoi(res);
+    int result;
+    if (rpc_delete_key_1(key, &result, clnt) != RPC_SUCCESS) {
+        clnt_perror(clnt, "Error en delete_key()");
+        return -1;
+    }
+    return result;
 }
 
 int exist(int key) {
-    int sc = connect_to_server();
-    if (sc < 0) return -1;
+    if (connect_to_server() < 0) return -1;
 
-    char op[] = "6"; 
-    send_message(sc, op, strlen(op) + 1);
-
-    // Enviamos la clave al servidor
-    char entero_a_cadena[MAXSTR];
-    sprintf(entero_a_cadena, "%d", key);
-    send_message(sc, entero_a_cadena, strlen(entero_a_cadena) + 1);
-    
-    char res[MAXSTR];
-    readLine(sc, res, MAXSTR);
-
-    return atoi(res);
+    int result;
+    if (rpc_exist_1(key, &result, clnt) != RPC_SUCCESS) {
+        clnt_perror(clnt, "Error en exist()");
+        return -1;
+    }
+    return result;
 }
