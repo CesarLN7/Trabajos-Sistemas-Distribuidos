@@ -1,4 +1,3 @@
 #!/bin/bash
 
-make re
-./servidor.out
+make -f Makefile.claves-rpc && ./servidor-rpc

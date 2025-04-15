@@ -8,8 +8,8 @@ SERVER = servidor-rpc
 
 SOURCES_CLNT.c = 
 SOURCES_CLNT.h = 
-SOURCES_SVC.c = 
-SOURCES_SVC.h = 
+SOURCES_SVC.c = claves/claves.c
+SOURCES_SVC.h = claves/claves.h proxy-rpc.h mensaje.h
 SOURCES.x = claves-rpc.x
 
 TARGETS_SVC.c = claves-rpc_svc.c claves-rpc_server.c claves-rpc_xdr.c 
@@ -23,7 +23,7 @@ OBJECTS_SVC = $(SOURCES_SVC.c:%.c=%.o) $(TARGETS_SVC.c:%.c=%.o)
 CPPFLAGS += -D_REENTRANT
 CFLAGS += -g 
 LDLIBS += -lnsl -lpthread 
- RPCGENFLAGS = 
+RPCGENFLAGS = 
 
 # Targets 
 
@@ -42,5 +42,22 @@ $(CLIENT) : $(OBJECTS_CLNT)
 $(SERVER) : $(OBJECTS_SVC) 
 	$(LINK.c) -o $(SERVER) $(OBJECTS_SVC) $(LDLIBS)
 
+libclaves.so: proxy-rpc.o claves-rpc_clnt.o claves-rpc_xdr.o
+	$(CC) -shared -o libclaves.so $^
+
+cliente1: app-cliente-1.c libclaves.so
+	$(CC) -o cliente1 app-cliente-1.c -L. -lclaves -Wl,-rpath=. $(LDLIBS)
+
+cliente2: app-cliente-2.c libclaves.so
+	$(CC) -o cliente2 app-cliente-2.c -L. -lclaves -Wl,-rpath=. $(LDLIBS)
+
+cliente3: app-cliente-3.c libclaves.so
+	$(CC) -o cliente3 app-cliente-3.c -L. -lclaves -Wl,-rpath=. $(LDLIBS)
+
+cliente4: app-cliente-4.c libclaves.so
+	$(CC) -o cliente4 app-cliente-4.c -L. -lclaves -Wl,-rpath=. $(LDLIBS)
+
  clean:
-	 $(RM) core $(TARGETS) $(OBJECTS_CLNT) $(OBJECTS_SVC) $(CLIENT) $(SERVER)
+	 $(RM) core $(OBJECTS_CLNT) $(OBJECTS_SVC) $(CLIENT) $(SERVER)
+
+.PHONY: all clean cliente1 cliente2 cliente3 cliente4 servidor
