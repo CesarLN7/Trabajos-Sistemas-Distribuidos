@@ -4,6 +4,8 @@
 #define MAXSTR 256
 #define MAXVEC 32
 
+#include "claves/claves.h"
+
 // Estructura para la comunicación mediante colas de mensajes.
 
 struct message {

@@ -10,7 +10,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include <pthread.h>
 
 #include "claves-rpc.h"
 #include "mensaje.h"

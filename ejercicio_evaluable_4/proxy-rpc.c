@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#include "claves-rpc.h"
 #include "proxy-rpc.h"
 #include "mensaje.h"
 
@@ -79,15 +78,14 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
 
     if (connect_to_server() < 0) return -1;
 
-    struct key_args_in args;
-    strncpy(args.tupla.value1, value1, MAXSTR);
-    args.tupla.N_value2 = N_value2;
-    memcpy(args.tupla.V_value2.V_value2_val, V_value2, sizeof(double) * N_value2);
-    args.tupla.value3.x = value3.x;
-    args.tupla.value3.y = value3.y;
+    struct args_in args;
+    strncpy(args.value1, value1, MAXSTR);
+    args.N_value2 = N_value2;
+    memcpy(args.V_value2.V_value2_val, V_value2, sizeof(double) * N_value2);
+    args.value3 = value3;
 
     int result;
-    if (rpc_set_value_1(&args, clnt) != RPC_SUCCESS) {
+    if (rpc_set_value_1(key, args, &result, clnt) != RPC_SUCCESS) {
         clnt_perror(clnt, "Error en set_value()");
         return -1;
     }
@@ -100,22 +98,21 @@ int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coor
 int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
     if (connect_to_server() < 0) return -1;
 
-    struct args_out *result = rpc_get_value_1(&key, clnt);
-    if (result == NULL) {
+    struct args_out result;
+    memset(&result, 0, sizeof(result));
+
+    if (rpc_get_value_1(key, &result, clnt) != RPC_SUCCESS) {
         clnt_perror(clnt, "Error en get_value()");
         return -1;
     }
 
-    strncpy(value1, result->value1, MAXSTR);
-    *N_value2 = result->N_value2;
+    strncpy(value1, result.value1, MAXSTR);
+    *N_value2 = result.N_value2;
+    memcpy(V_value2, result.V_value2, sizeof(double) * (*N_value2));
+    *value3 = result.value3;
 
-    memcpy(V_value2, result->V_value2.V_value2_val, sizeof(double) * (*N_value2));
-    value3->x = result->value3.x;
-    value3->y = result->value3.y;
-
-    return result->res;
+    return result.res;
 }
-
 
 int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
     if (is_value1_valid(value1) == -1 || is_N_value2_valid(N_value2) == -1) {
@@ -124,47 +121,39 @@ int modify_value(int key, char *value1, int N_value2, double *V_value2, struct C
 
     if (connect_to_server() < 0) return -1;
 
-    struct key_args_in args;
-    args.key = key;
-    strncpy(args.tupla.value1, value1, MAXSTR);
-    args.tupla.N_value2 = N_value2;
-    memcpy(args.tupla.V_value2.V_value2_val, V_value2, sizeof(double) * N_value2);
-    args.tupla.V_value2.V_value2_len = N_value2;
-    args.tupla.value3.x = value3.x;
-    args.tupla.value3.y = value3.y;
+    struct args_in args;
+    strncpy(args.value1, value1, MAXSTR);
+    args.N_value2 = N_value2;
+    memcpy(args.V_value2, V_value2, sizeof(double) * N_value2);
+    args.value3 = value3;
 
-    int *result = rpc_modify_value_1(&args, clnt);
-    if (result == NULL) {
+    int result;
+    if (rpc_modify_value_1(key, args, &result, clnt) != RPC_SUCCESS) {
         clnt_perror(clnt, "Error en modify_value()");
         return -1;
     }
+    return result;
 
-    return *result;
 }
-
 
 int delete_key(int key) {
     if (connect_to_server() < 0) return -1;
 
-    int *result = rpc_delete_key_1(&key, clnt);
-    if (result == NULL) {
+    int result;
+    if (rpc_delete_key_1(key, &result, clnt) != RPC_SUCCESS) {
         clnt_perror(clnt, "Error en delete_key()");
         return -1;
     }
-
-    return *result;
+    return result;
 }
-
 
 int exist(int key) {
     if (connect_to_server() < 0) return -1;
 
-    int *result = rpc_exist_1(&key, clnt);
-    if (result == NULL) {
+    int result;
+    if (rpc_exist_1(key, &result, clnt) != RPC_SUCCESS) {
         clnt_perror(clnt, "Error en exist()");
         return -1;
     }
-
-    return *result;
+    return result;
 }
-
