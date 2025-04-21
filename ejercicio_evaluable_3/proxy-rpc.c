@@ -168,3 +168,9 @@ int exist(int key) {
     return *result;
 }
 
+int main() {
+    printf("Cliente RPC\n");
+    return 0;
+}
+
+

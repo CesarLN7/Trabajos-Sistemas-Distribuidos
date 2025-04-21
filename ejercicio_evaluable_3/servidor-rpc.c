@@ -16,108 +16,80 @@
 #include "mensaje.h"
 #include "claves/claves.h"
 
-static pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t m;
 
-bool_t
-rpc_destroy_1_svc(int *result, struct svc_req *rqstp)
+int *
+rpc_destroy_1_svc(void *arg, struct svc_req *rqstp)
 {
-	bool_t retval;
-
-	printf("Ejecutando destroy en el servidor\n");
-	// Se bloquea del mutex
-	pthread_mutex_lock(&m);
-	// Se llama a la función destroy()
-	*result = destroy();
-	// Se desbloquea el mutex
-	pthread_mutex_unlock(&m);
-
-	retval = TRUE;
-	return retval;
+    static int result;
+    pthread_mutex_lock(&m);
+    result = destroy();
+    pthread_mutex_unlock(&m);
+    return &result;
 }
 
-bool_t
-rpc_set_value_1_svc(int key, struct args_in arg2, int *result,  struct svc_req *rqstp)
+int *
+rpc_set_value_1_svc(struct key_args_in *arg, struct svc_req *rqstp)
 {
-	bool_t retval;
+    static int result;
+    struct Coord coord;
+    coord.x = arg->tupla.value3.x;
+    coord.y = arg->tupla.value3.y;
 
-	printf("Ejecutando set_value en el servidor\n");
-	// Se bloquea del mutex
-	pthread_mutex_lock(&m);
-	// Se llama a la función set_value()
-	*result = set_value(key, arg2.value1, arg2.N_value2, arg2.V_value2, arg2.value3);
-	// Se desbloquea el mutex
-	pthread_mutex_unlock(&m);
-
-	retval = TRUE;
-	return retval;
+    pthread_mutex_lock(&m);
+    result = set_value(arg->key, arg->tupla.value1, arg->tupla.N_value2, arg->tupla.V_value2.V_value2_val, coord);
+    pthread_mutex_unlock(&m);
+    return &result;
 }
 
-bool_t
-rpc_get_value_1_svc(int key, struct args_out *result,  struct svc_req *rqstp)
+struct args_out *
+rpc_get_value_1_svc(int *key, struct svc_req *rqstp)
 {
-	bool_t retval;
+    static struct args_out result;
+    struct Coord coord;
 
-	printf("Ejecutando get_value en el servidor\n");
-	// Se bloquea del mutex
-	pthread_mutex_lock(&m);
-	// Se llama a la función get_value()
-	result->res = get_value(key, result->value1, &(result->N_value2), result->V_value2, result->value3);
-	// Se desbloquea el mutex
-	pthread_mutex_unlock(&m);
+    pthread_mutex_lock(&m);
+    result.res = get_value(*key, result.value1, &result.N_value2, result.V_value2.V_value2_val, &coord);
+    pthread_mutex_unlock(&m);
 
-	retval = TRUE;
-	return retval;
+    result.value3.x = coord.x;
+    result.value3.y = coord.y;
+
+    return &result;
 }
 
-bool_t
-rpc_modify_value_1_svc(int key, struct args_in arg2, int *result,  struct svc_req *rqstp)
+int *
+rpc_modify_value_1_svc(struct key_args_in *arg, struct svc_req *rqstp)
 {
-	bool_t retval;
+    static int result;
+    struct Coord coord;
+    coord.x = arg->tupla.value3.x;
+    coord.y = arg->tupla.value3.y;
 
-	printf("Ejecutando modify_value en el servidor\n");
-	// Se bloquea del mutex
-	pthread_mutex_lock(&m);
-	// Se llama a la función modify_value()
-	*result = modify_value(key, arg2.value1, arg2.N_value2, arg2.V_value2, arg2.value3);
-	// Se desbloquea el mutex
-	pthread_mutex_unlock(&m);
-
-	retval = TRUE;
-	return retval;
+    pthread_mutex_lock(&m);
+    result = modify_value(arg->key, arg->tupla.value1, arg->tupla.N_value2, arg->tupla.V_value2.V_value2_val, coord);
+    pthread_mutex_unlock(&m);
+    return &result;
 }
 
-bool_t
-rpc_delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
+int *
+rpc_delete_key_1_svc(int *key, struct svc_req *rqstp)
 {
-	bool_t retval;
-
-	printf("Ejecutando delete_key en el servidor\n");
-	// Se bloquea del mutex
-	pthread_mutex_lock(&m);
-	// Se llama a la función deletye_key()
-	*result = delete_key(key);
-	// Se desbloquea el mutex
-	pthread_mutex_unlock(&m);
-
-	retval = TRUE;
-	return retval;
+    static int result;
+    pthread_mutex_lock(&m);
+    result = delete_key(*key);
+    pthread_mutex_unlock(&m);
+    return &result;
 }
 
-bool_t
-rpc_exist_1_svc(int key, int *result,  struct svc_req *rqstp)
+int *
+rpc_exist_1_svc(int *key, struct svc_req *rqstp)
 {
-	bool_t retval;
-
-	printf("Ejecutando exist en el servidor\n");
-	// Se bloquea del mutex
-	pthread_mutex_lock(&m);
-	// Se llama a la función exist()
-	*result = exist(key);
-	// Se desbloquea el mutex
-	pthread_mutex_unlock(&m);
-
-	retval = TRUE;
-	return retval;
+    static int result;
+    pthread_mutex_lock(&m);
+    result = exist(*key);
+    pthread_mutex_unlock(&m);
+    return &result;
 }
 
 int
