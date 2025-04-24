@@ -30,4 +30,5 @@ cliente: cliente.c
 clean:
 	rm -f *.o *.so ./lib/*.so *.out -d ./lib ./mensajes/* ./mensajes
 
+.SUFFIXES:
 .PHONY : clean

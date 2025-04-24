@@ -8,6 +8,7 @@
 
 #include <rpc/rpc.h>
 
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,26 +21,8 @@ struct Coord_RPC {
 };
 typedef struct Coord_RPC Coord_RPC;
 
-struct args_in {
-	int res;
-	char *value1;
-	int N_value2;
-	struct {
-		u_int V_value2_len;
-		double *V_value2_val;
-	} V_value2;
-	struct Coord_RPC value3;
-};
-typedef struct args_in args_in;
-
-struct key_args_in {
+struct args_struct {
 	int key;
-	struct args_in tupla;
-};
-typedef struct key_args_in key_args_in;
-
-struct args_out {
-	int res;
 	char *value1;
 	int N_value2;
 	struct {
@@ -47,53 +30,53 @@ struct args_out {
 		double *V_value2_val;
 	} V_value2;
 	struct Coord_RPC value3;
-	int status;
+	int res;
 };
-typedef struct args_out args_out;
+typedef struct args_struct args_struct;
 
 #define INTERFAZ 99
 #define FUNCIONESVER 1
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define rpc_destroy 1
-extern  int * rpc_destroy_1(void *, CLIENT *);
-extern  int * rpc_destroy_1_svc(void *, struct svc_req *);
+extern  enum clnt_stat rpc_destroy_1(int *, CLIENT *);
+extern  bool_t rpc_destroy_1_svc(int *, struct svc_req *);
 #define rpc_set_value 2
-extern  int * rpc_set_value_1(struct key_args_in *, CLIENT *);
-extern  int * rpc_set_value_1_svc(struct key_args_in *, struct svc_req *);
+extern  enum clnt_stat rpc_set_value_1(args_struct , int *, CLIENT *);
+extern  bool_t rpc_set_value_1_svc(args_struct , int *, struct svc_req *);
 #define rpc_get_value 3
-extern  struct args_out * rpc_get_value_1(int *, CLIENT *);
-extern  struct args_out * rpc_get_value_1_svc(int *, struct svc_req *);
+extern  enum clnt_stat rpc_get_value_1(int , args_struct *, CLIENT *);
+extern  bool_t rpc_get_value_1_svc(int , args_struct *, struct svc_req *);
 #define rpc_modify_value 4
-extern  int * rpc_modify_value_1(struct key_args_in *, CLIENT *);
-extern  int * rpc_modify_value_1_svc(struct key_args_in *, struct svc_req *);
+extern  enum clnt_stat rpc_modify_value_1(args_struct , int *, CLIENT *);
+extern  bool_t rpc_modify_value_1_svc(args_struct , int *, struct svc_req *);
 #define rpc_delete_key 5
-extern  int * rpc_delete_key_1(int *, CLIENT *);
-extern  int * rpc_delete_key_1_svc(int *, struct svc_req *);
+extern  enum clnt_stat rpc_delete_key_1(int , int *, CLIENT *);
+extern  bool_t rpc_delete_key_1_svc(int , int *, struct svc_req *);
 #define rpc_exist 6
-extern  int * rpc_exist_1(int *, CLIENT *);
-extern  int * rpc_exist_1_svc(int *, struct svc_req *);
+extern  enum clnt_stat rpc_exist_1(int , int *, CLIENT *);
+extern  bool_t rpc_exist_1_svc(int , int *, struct svc_req *);
 extern int interfaz_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
 #define rpc_destroy 1
-extern  int * rpc_destroy_1();
-extern  int * rpc_destroy_1_svc();
+extern  enum clnt_stat rpc_destroy_1();
+extern  bool_t rpc_destroy_1_svc();
 #define rpc_set_value 2
-extern  int * rpc_set_value_1();
-extern  int * rpc_set_value_1_svc();
+extern  enum clnt_stat rpc_set_value_1();
+extern  bool_t rpc_set_value_1_svc();
 #define rpc_get_value 3
-extern  struct args_out * rpc_get_value_1();
-extern  struct args_out * rpc_get_value_1_svc();
+extern  enum clnt_stat rpc_get_value_1();
+extern  bool_t rpc_get_value_1_svc();
 #define rpc_modify_value 4
-extern  int * rpc_modify_value_1();
-extern  int * rpc_modify_value_1_svc();
+extern  enum clnt_stat rpc_modify_value_1();
+extern  bool_t rpc_modify_value_1_svc();
 #define rpc_delete_key 5
-extern  int * rpc_delete_key_1();
-extern  int * rpc_delete_key_1_svc();
+extern  enum clnt_stat rpc_delete_key_1();
+extern  bool_t rpc_delete_key_1_svc();
 #define rpc_exist 6
-extern  int * rpc_exist_1();
-extern  int * rpc_exist_1_svc();
+extern  enum clnt_stat rpc_exist_1();
+extern  bool_t rpc_exist_1_svc();
 extern int interfaz_1_freeresult ();
 #endif /* K&R C */
 
@@ -101,15 +84,11 @@ extern int interfaz_1_freeresult ();
 
 #if defined(__STDC__) || defined(__cplusplus)
 extern  bool_t xdr_Coord_RPC (XDR *, Coord_RPC*);
-extern  bool_t xdr_args_in (XDR *, args_in*);
-extern  bool_t xdr_key_args_in (XDR *, key_args_in*);
-extern  bool_t xdr_args_out (XDR *, args_out*);
+extern  bool_t xdr_args_struct (XDR *, args_struct*);
 
 #else /* K&R C */
 extern bool_t xdr_Coord_RPC ();
-extern bool_t xdr_args_in ();
-extern bool_t xdr_key_args_in ();
-extern bool_t xdr_args_out ();
+extern bool_t xdr_args_struct ();
 
 #endif /* K&R C */
 

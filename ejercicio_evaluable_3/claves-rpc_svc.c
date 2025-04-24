@@ -16,19 +16,63 @@
 #define SIG_PF void(*)(int)
 #endif
 
+int
+_rpc_destroy_1 (void  *argp, void *result, struct svc_req *rqstp)
+{
+	return (rpc_destroy_1_svc(result, rqstp));
+}
+
+int
+_rpc_set_value_1 (args_struct  *argp, void *result, struct svc_req *rqstp)
+{
+	return (rpc_set_value_1_svc(*argp, result, rqstp));
+}
+
+int
+_rpc_get_value_1 (int  *argp, void *result, struct svc_req *rqstp)
+{
+	return (rpc_get_value_1_svc(*argp, result, rqstp));
+}
+
+int
+_rpc_modify_value_1 (args_struct  *argp, void *result, struct svc_req *rqstp)
+{
+	return (rpc_modify_value_1_svc(*argp, result, rqstp));
+}
+
+int
+_rpc_delete_key_1 (int  *argp, void *result, struct svc_req *rqstp)
+{
+	return (rpc_delete_key_1_svc(*argp, result, rqstp));
+}
+
+int
+_rpc_exist_1 (int  *argp, void *result, struct svc_req *rqstp)
+{
+	return (rpc_exist_1_svc(*argp, result, rqstp));
+}
+
 static void
 interfaz_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
-		struct key_args_in rpc_set_value_1_arg;
+		args_struct rpc_set_value_1_arg;
 		int rpc_get_value_1_arg;
-		struct key_args_in rpc_modify_value_1_arg;
+		args_struct rpc_modify_value_1_arg;
 		int rpc_delete_key_1_arg;
 		int rpc_exist_1_arg;
 	} argument;
-	char *result;
+	union {
+		int rpc_destroy_1_res;
+		int rpc_set_value_1_res;
+		args_struct rpc_get_value_1_res;
+		int rpc_modify_value_1_res;
+		int rpc_delete_key_1_res;
+		int rpc_exist_1_res;
+	} result;
+	bool_t retval;
 	xdrproc_t _xdr_argument, _xdr_result;
-	char *(*local)(char *, struct svc_req *);
+	bool_t (*local)(char *, void *, struct svc_req *);
 
 	switch (rqstp->rq_proc) {
 	case NULLPROC:
@@ -38,37 +82,37 @@ interfaz_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	case rpc_destroy:
 		_xdr_argument = (xdrproc_t) xdr_void;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) rpc_destroy_1_svc;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_rpc_destroy_1;
 		break;
 
 	case rpc_set_value:
-		_xdr_argument = (xdrproc_t) xdr_key_args_in;
+		_xdr_argument = (xdrproc_t) xdr_args_struct;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) rpc_set_value_1_svc;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_rpc_set_value_1;
 		break;
 
 	case rpc_get_value:
 		_xdr_argument = (xdrproc_t) xdr_int;
-		_xdr_result = (xdrproc_t) xdr_args_out;
-		local = (char *(*)(char *, struct svc_req *)) rpc_get_value_1_svc;
+		_xdr_result = (xdrproc_t) xdr_args_struct;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_rpc_get_value_1;
 		break;
 
 	case rpc_modify_value:
-		_xdr_argument = (xdrproc_t) xdr_key_args_in;
+		_xdr_argument = (xdrproc_t) xdr_args_struct;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) rpc_modify_value_1_svc;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_rpc_modify_value_1;
 		break;
 
 	case rpc_delete_key:
 		_xdr_argument = (xdrproc_t) xdr_int;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) rpc_delete_key_1_svc;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_rpc_delete_key_1;
 		break;
 
 	case rpc_exist:
 		_xdr_argument = (xdrproc_t) xdr_int;
 		_xdr_result = (xdrproc_t) xdr_int;
-		local = (char *(*)(char *, struct svc_req *)) rpc_exist_1_svc;
+		local = (bool_t (*) (char *, void *,  struct svc_req *))_rpc_exist_1;
 		break;
 
 	default:
@@ -80,14 +124,17 @@ interfaz_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		svcerr_decode (transp);
 		return;
 	}
-	result = (*local)((char *)&argument, rqstp);
-	if (result != NULL && !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
+	retval = (bool_t) (*local)((char *)&argument, (void *)&result, rqstp);
+	if (retval > 0 && !svc_sendreply(transp, (xdrproc_t) _xdr_result, (char *)&result)) {
 		svcerr_systemerr (transp);
 	}
 	if (!svc_freeargs (transp, (xdrproc_t) _xdr_argument, (caddr_t) &argument)) {
 		fprintf (stderr, "%s", "unable to free arguments");
 		exit (1);
 	}
+	if (!interfaz_1_freeresult (transp, _xdr_result, (caddr_t) &result))
+		fprintf (stderr, "%s", "unable to free results");
+
 	return;
 }
 
