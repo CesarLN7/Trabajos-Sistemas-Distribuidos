@@ -16,14 +16,23 @@ dir:
 	$(shell mkdir -p lib)
 
 # Creación librería compartida
-libclaves: claves.c tuplas_clnt.c tuplas_xdr.c
+libclaves: proxy-rpc.c claves-rpc_clnt.c claves-rpc_xdr.c
 	$(CC) $(LDFLAGS) $(CPPFLAGS) $(CFLAGS) -fPIC -shared $^ -o ./lib/$@.so $(LDLIBS)
 
 # Compilación programas principales
-servidor: tuplas_server.c tuplas_svc.c tuplas_xdr.c
+servidor: servidor-rpc.c claves-rpc_svc.c claves-rpc_xdr.c
 	$(CC) $(LDFLAGS) $(CPPFLAGS) $(CFLAGS) $^ -o $@.out $(LDLIBS)  
 
-cliente: cliente.c
+cliente1: app-cliente-1.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@.out -L./lib -lclaves -Wl,-rpath=./lib $(LDLIBS)
+
+cliente2: app-cliente-2.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@.out -L./lib -lclaves -Wl,-rpath=./lib $(LDLIBS)
+
+cliente3: app-cliente-3.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@.out -L./lib -lclaves -Wl,-rpath=./lib $(LDLIBS)
+
+cliente4: app-cliente-4.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $^ -o $@.out -L./lib -lclaves -Wl,-rpath=./lib $(LDLIBS)
 
 # Limpieza archivos generados
