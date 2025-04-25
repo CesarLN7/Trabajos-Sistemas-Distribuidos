@@ -39,11 +39,11 @@ int result_5;
 int result_6;
 
 // Parámetros de las funciones de los RPCs
-int get_value_tuplas_1_key;
-args_struct set_value_tuplas_1_msg;
-args_struct modify_value_tuplas_1_msg;
-int delete_key_tuplas_1_key;
-int exist_tuplas_1_key;
+int rpc_get_value_1_key;
+args_struct rpc_set_value_1_aux;
+args_struct rpc_modify_value_1_aux;
+int rpc_delete_key_1_key;
+int rpc_exist_1_key;
 
 // ----------     FUNCIONES AUXILIARES    ---------- //
 
@@ -70,65 +70,67 @@ int destroy() {
     // Creamos el rpc y nos conectamos al servidor
     printf("Iniciando destroy\n");
     char* ip_tuplas = get_ip_tuplas();
-	clnt = clnt_create (ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
+	clnt = clnt_create(ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
     if (clnt == NULL) {
-		clnt_pcreateerror (ip_tuplas);
-		exit (1);
+		clnt_pcreateerror(ip_tuplas);
+		exit(1);
 	};
-    retval_1 = init_tuplas_1(&result_1, clnt);
+    retval_1 = rpc_destroy_1(&result_1, clnt);
     printf("Se ha conectado al servidor\n");
     if (retval_1 != RPC_SUCCESS) {
-	    clnt_perror (clnt, "Error RPC");
+	    clnt_perror(clnt, "Error RPC");
     };
     // Cerramos el rpc
     printf("Cerrando el RPC\n\n\n");
-    clnt_destroy (clnt);
+    clnt_destroy(clnt);
 	return result_1;
 };
 
-int set_value(int key, char* value1, int N_value2, double* V_value_2) {
+int set_value(int key, char* value1, int N_value2, double* V_value_2, struct Coord value3) {
     printf("Iniciando set_value\n");
     char* ip_tuplas = get_ip_tuplas();
     // Creamos el rpc y nos conectamos al servidor
-    clnt = clnt_create (ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
+    clnt = clnt_create(ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
     if (clnt == NULL) {
-        clnt_pcreateerror (ip_tuplas);
-        exit (1);
+        clnt_pcreateerror(ip_tuplas);
+        exit(1);
     };
     // Copiamos los valores en la estructura
-    set_value_tuplas_1_msg.key = key;
-    strcpy(set_value_tuplas_1_msg.value1, value1);
-    set_value_tuplas_1_msg.N_value2 = N_value2;
+    rpc_set_value_1_aux.key = key;
+    strcpy(rpc_set_value_1_aux.value1, value1);
+    rpc_set_value_1_aux.N_value2 = N_value2;
     for (int i = 0; i < N_value2; i++) {
-        set_value_tuplas_1_msg.V_value2[i] = V_value_2[i];
+        rpc_set_value_1_aux.V_value2[i] = V_value_2[i];
     }
+    rpc_set_value_1_aux.value3.x = value3.x;
+	rpc_set_value_1_aux.value3.y = value3.y;
     // Llamamos a la función del servidor
-    retval_2 = set_value_tuplas_1(set_value_tuplas_1_msg, &result_2, clnt);
+    retval_2 = rpc_set_value_1(rpc_set_value_1_aux, &result_2, clnt);
     printf("Se ha conectado al servidor\n");
     if (retval_2 != RPC_SUCCESS) {
-        clnt_perror (clnt, "Error RPC");
+        clnt_perror(clnt, "Error RPC");
     };
     // Cerramos el rpc
     printf("Cerrando el RPC\n\n\n");
-    clnt_destroy (clnt);
+    clnt_destroy(clnt);
 	return result_2;
 }
 
-int get_value(int key, char* value1, int* N_value2, double* V_value_2) {
+int get_value(int key, char* value1, int* N_value2, double* V_value_2, struct Coord *value3) {
     printf("Iniciando get_value\n");
     // Creamos el rpc y nos conectamos al servidor
     char* ip_tuplas = get_ip_tuplas();
-    clnt = clnt_create (ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
+    clnt = clnt_create(ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
     if (clnt == NULL) {
-        clnt_pcreateerror (ip_tuplas);
-        exit (1);
+        clnt_pcreateerror(ip_tuplas);
+        exit(1);
     };
     // Llamamos a la función del servidor
-    get_value_tuplas_1_key = key;
-    retval_3 = get_value_tuplas_1(get_value_tuplas_1_key, &result_3, clnt);
+    rpc_get_value_1_key = key;
+    retval_3 = rpc_get_value_1(rpc_get_value_1_key, &result_3, clnt);
     printf("Se ha conectado al servidor\n");
     if (retval_3 != RPC_SUCCESS) {
-        clnt_perror (clnt, "Error RPC");
+        clnt_perror(clnt, "Error RPC");
     };
     // Copiamos los valores en las variables de salida
     strcpy(value1, result_3.value1);
@@ -136,37 +138,41 @@ int get_value(int key, char* value1, int* N_value2, double* V_value_2) {
     for (int i = 0; i < *N_value2; i++) {
         V_value_2[i] = result_3.V_value2[i];
     }
+    value3->x = result_3.value3.x;
+    value3->y = result_3.value3.y;
     // Cerramos el rpc
     printf("Cerrando el RPC\n\n\n");
-    clnt_destroy (clnt);
+    clnt_destroy(clnt);
 	return result_3.key;
 }
 
-int modify_value(int key, char* value1, int N_value2, double* V_value_2) {
+int modify_value(int key, char* value1, int N_value2, double* V_value_2, struct Coord value3) {
     printf("Iniciando modify_value\n");
     // Creamos el rpc y nos conectamos al servidor
     char* ip_tuplas = get_ip_tuplas();
-    clnt = clnt_create (ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
+    clnt = clnt_create(ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
     if (clnt == NULL) {
-        clnt_pcreateerror (ip_tuplas);
-        exit (1);
+        clnt_pcreateerror(ip_tuplas);
+        exit(1);
     };
     // Copiamos los valores en la estructura
-    modify_value_tuplas_1_msg.key = key;
-    strcpy(modify_value_tuplas_1_msg.value1, value1);
-    modify_value_tuplas_1_msg.N_value2 = N_value2;
+    rpc_modify_value_1_aux.key = key;
+    strcpy(rpc_modify_value_1_aux.value1, value1);
+    rpc_modify_value_1_aux.N_value2 = N_value2;
     for (int i = 0; i < N_value2; i++) {
-        modify_value_tuplas_1_msg.V_value2[i] = V_value_2[i];
+        rpc_modify_value_1_aux.V_value2[i] = V_value_2[i];
     }
+    rpc_modify_value_1_aux.value3.x = value3.x;
+	rpc_modify_value_1_aux.value3.y = value3.y;
     // Llamamos a la función del servidor
-    retval_4 = modify_value_tuplas_1(modify_value_tuplas_1_msg, &result_4, clnt);
+    retval_4 = rpc_modify_value_1(rpc_modify_value_1_aux, &result_4, clnt);
     printf("Se ha conectado al servidor\n");
     if (retval_4 != RPC_SUCCESS) {
-        clnt_perror (clnt, "Error RPC");
+        clnt_perror(clnt, "Error RPC");
     };
     // Cerramos el rpc
     printf("Cerrando el RPC\n\n\n");
-    clnt_destroy (clnt);
+    clnt_destroy(clnt);
     return result_4;
 }
 
@@ -174,21 +180,21 @@ int delete_key(int key) {
     printf("Iniciando delete_key\n");
     // Creamos el rpc y nos conectamos al servidor
     char* ip_tuplas = get_ip_tuplas();
-    clnt = clnt_create (ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
+    clnt = clnt_create(ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
     if (clnt == NULL) {
-        clnt_pcreateerror (ip_tuplas);
-        exit (1);
+        clnt_pcreateerror(ip_tuplas);
+        exit(1);
     };
     // Llamamos a la función del servidor
-    delete_key_tuplas_1_key = key;
-    retval_5 = delete_key_tuplas_1(delete_key_tuplas_1_key, &result_5, clnt);
+    rpc_delete_key_1_key = key;
+    retval_5 = rpc_delete_key_1(rpc_delete_key_1_key, &result_5, clnt);
     printf("Se ha conectado al servidor\n");
     if (retval_5 != RPC_SUCCESS) {
-        clnt_perror (clnt, "Error RPC");
+        clnt_perror(clnt, "Error RPC");
     };
     // Cerramos el rpc
     printf("Cerrando el RPC\n\n\n");
-    clnt_destroy (clnt);
+    clnt_destroy(clnt);
     return result_5;
 }
 
@@ -196,20 +202,20 @@ int exist(int key) {
     printf("Iniciando exist\n");
     // Creamos el rpc y nos conectamos al servidor
     char* ip_tuplas = get_ip_tuplas();
-    clnt = clnt_create (ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
+    clnt = clnt_create(ip_tuplas, INTERFAZ, FUNCIONESVER, "tcp");
     if (clnt == NULL) {
-        clnt_pcreateerror (ip_tuplas);
-        exit (1);
+        clnt_pcreateerror(ip_tuplas);
+        exit(1);
     };
     // Llamamos a la función del servidor
-    exist_tuplas_1_key = key;
-    retval_6 = exist_tuplas_1(exist_tuplas_1_key, &result_6, clnt);
+    rpc_exist_1_key = key;
+    retval_6 = rpc_exist_1(rpc_exist_1_key, &result_6, clnt);
     printf("Se ha conectado al servidor\n");
     if (retval_6 != RPC_SUCCESS) {
-        clnt_perror (clnt, "Error RPC");
+        clnt_perror(clnt, "Error RPC");
     };
     // Cerramos el rpc
     printf("Cerrando el RPC\n\n\n");
-    clnt_destroy (clnt);
+    clnt_destroy(clnt);
     return result_6;
 }

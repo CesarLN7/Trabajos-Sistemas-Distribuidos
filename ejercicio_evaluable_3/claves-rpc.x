@@ -5,9 +5,9 @@ struct Coord_RPC {
 
 struct args_struct {
     int key;
-    string value1<256>;
+    char value1[256];
     int N_value2;
-    double V_value2<32>;
+    double V_value2[32];
     struct Coord_RPC value3;
     int res;
 };

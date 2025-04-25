@@ -23,12 +23,9 @@ typedef struct Coord_RPC Coord_RPC;
 
 struct args_struct {
 	int key;
-	char *value1;
+	char value1[256];
 	int N_value2;
-	struct {
-		u_int V_value2_len;
-		double *V_value2_val;
-	} V_value2;
+	double V_value2[32];
 	struct Coord_RPC value3;
 	int res;
 };

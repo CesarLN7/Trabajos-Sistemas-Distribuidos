@@ -6,7 +6,7 @@
 
 #include "claves-rpc.h"
 #include "mensaje.h"
-#include "claves/claves.h"
+#include "claves/claves.c"
 
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 

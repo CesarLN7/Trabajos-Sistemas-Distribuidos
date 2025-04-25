@@ -8,7 +8,7 @@ CFLAGS = -g -I/usr/include/tirpc
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib
 
 # Generación programas principales -> cliente y servidor
-all: dir libclaves servidor cliente 
+all: dir libclaves servidor cliente1 cliente2 cliente3 cliente4
 .PHONY : all
 
 # Creación directorio lib

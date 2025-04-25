@@ -22,13 +22,15 @@ xdr_args_struct (XDR *xdrs, args_struct *objp)
 {
 	register int32_t *buf;
 
+	int i;
 	 if (!xdr_int (xdrs, &objp->key))
 		 return FALSE;
-	 if (!xdr_string (xdrs, &objp->value1, 256))
+	 if (!xdr_vector (xdrs, (char *)objp->value1, 256,
+		sizeof (char), (xdrproc_t) xdr_char))
 		 return FALSE;
 	 if (!xdr_int (xdrs, &objp->N_value2))
 		 return FALSE;
-	 if (!xdr_array (xdrs, (char **)&objp->V_value2.V_value2_val, (u_int *) &objp->V_value2.V_value2_len, 32,
+	 if (!xdr_vector (xdrs, (char *)objp->V_value2, 32,
 		sizeof (double), (xdrproc_t) xdr_double))
 		 return FALSE;
 	 if (!xdr_Coord_RPC (xdrs, &objp->value3))
