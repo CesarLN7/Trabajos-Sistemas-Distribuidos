@@ -2,6 +2,7 @@
 
 #include "claves/claves.h"
 #include "claves-rpc.h"
+#include "mensaje.h"
 
 // Librerías básicas
 #include <fcntl.h>      
@@ -45,8 +46,21 @@ args_struct rpc_modify_value_1_aux;
 int rpc_delete_key_1_key;
 int rpc_exist_1_key;
 
-// ----------     FUNCIONES AUXILIARES    ---------- //
+// función para comprobar si la longitud de value1 es correcta
+int is_value1_valid(char *value1) {
+    if (strlen(value1) > MAXSTR) {
+        printf("Error: La cadena excede los 255 caracteres permitidos.\n");
+        return -1;
+    }
+}
 
+// función para comprobar si N_value2 está en el rango correspondiente
+int is_N_value2_valid(int N_value2) {
+    if (N_value2 < 1 || N_value2 > MAXVEC) {
+        printf("Error: El valor de N_value2 no es correcto.\n");
+        return -1; // Error: N_value2 fuera de rango
+    }
+}
 // Función para obtener la variable de entorno IP_TUPLAS
 char* get_ip_tuplas() {
     printf("Obteniendo IP_TUPLAS\n");
@@ -87,6 +101,9 @@ int destroy() {
 };
 
 int set_value(int key, char* value1, int N_value2, double* V_value_2, struct Coord value3) {
+    if (is_value1_valid(value1) == -1 || is_N_value2_valid(N_value2) == -1) {
+        return -1;
+    }
     printf("Iniciando set_value\n");
     char* ip_tuplas = get_ip_tuplas();
     // Creamos el rpc y nos conectamos al servidor
@@ -147,6 +164,10 @@ int get_value(int key, char* value1, int* N_value2, double* V_value_2, struct Co
 }
 
 int modify_value(int key, char* value1, int N_value2, double* V_value_2, struct Coord value3) {
+    if (is_value1_valid(value1) == -1 || is_N_value2_valid(N_value2) == -1) {
+        return -1;
+    }
+
     printf("Iniciando modify_value\n");
     // Creamos el rpc y nos conectamos al servidor
     char* ip_tuplas = get_ip_tuplas();

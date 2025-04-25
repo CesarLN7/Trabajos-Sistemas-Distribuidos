@@ -15,7 +15,9 @@ rpc_destroy_1_svc(int *result, struct svc_req *rqstp)
 {
 	bool_t retval;
 	retval = TRUE;
+	pthread_mutex_lock(&m);
 	*result = destroy();
+	pthread_mutex_unlock(&m);
 	return retval;
 }
 
