@@ -30,7 +30,7 @@ interfaz_1(char *host)
 	int rpc_exist_1_key;
 
 #ifndef	DEBUG
-	clnt = clnt_create(host, INTERFAZ, FUNCIONESVER, "udp");
+	clnt = clnt_create (host, INTERFAZ, FUNCIONESVER, "udp");
 	if (clnt == NULL) {
 		clnt_pcreateerror (host);
 		exit (1);

@@ -4,11 +4,18 @@ LDLIBS = -lrt -lpthread -lnsl -ltirpc
 LDFLAGS = -L$(INSTALL_PATH)/lib/ -lnsl -lpthread -ldl -ltirpc 
 CPPFLAGS = -D_REENTRANT
 CFLAGS = -g -I/usr/include/tirpc
+SOURCES.x = claves-rpc.x
+RPCGENFLAGS = -N -M -a
+TARGETS = claves-rpc.h claves-rpc_xdr.c claves-rpc_clnt.c claves-rpc_svc.c
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:./lib
 
 # Generación programas principales -> cliente y servidor
 all: dir libclaves servidor cliente1 cliente2 cliente3 cliente4
+
+$(TARGETS) : $(SOURCES.x)
+	rpcgen $(RPCGENFLAGS) $(SOURCES.x)
+
 .PHONY : all
 
 # Creación directorio lib
