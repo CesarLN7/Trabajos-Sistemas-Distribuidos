@@ -30,22 +30,17 @@ rpc_set_value_1_svc(args_struct aux, int *result,  struct svc_req *rqstp)
 	int N_value2 = aux.N_value2;
 	double V_value2[MAXVEC];
 	struct Coord value3;
-	// Copiar los valores de aux a las variables locales
 	strcpy(value1, aux.value1);
 	for (int i = 0; i < N_value2; i++) {
 		V_value2[i] = aux.V_value2[i];
 	}
-	// Copiar los valores de aux a las variables locales
 	value3.x = aux.value3.x;
 	value3.y = aux.value3.y;
 
-	// Iniciar la sección crítica
 	pthread_mutex_lock(&m);
-	// Llamar a la función set_value
 	*result = set_value(key, value1, N_value2, V_value2, value3);
-	// Finalizar la sección crítica
 	pthread_mutex_unlock(&m);
-	// Retornar el resultado
+	
 	return retval;
 }
 
@@ -60,12 +55,10 @@ rpc_get_value_1_svc(int key, args_struct *result,  struct svc_req *rqstp)
 	double V_value2[MAXVEC];
 	struct Coord value3;
 	
-	// Iniciar la sección crítica
 	pthread_mutex_lock(&m);
-	// Llamar a la función get_value
 	result->key = get_value(key, value1, &N_value2, V_value2, &value3);
-	// Finalizar la sección crítica
 	pthread_mutex_unlock(&m);
+
 	// Copiar los valores a result
 	strcpy(result->value1, value1);
 	result->N_value2 = N_value2;
@@ -74,7 +67,7 @@ rpc_get_value_1_svc(int key, args_struct *result,  struct svc_req *rqstp)
 	}
 	result->value3.x = value3.x;
 	result->value3.y = value3.y;
-	// Retornar el resultado
+
 	return retval;
 }
 
@@ -89,20 +82,18 @@ rpc_modify_value_1_svc(args_struct aux, int *result,  struct svc_req *rqstp)
 	int N_value2 = aux.N_value2;
 	double V_value2[MAXVEC];
 	struct Coord value3;
-	// Copiar los valores de aux a las variables locales
+
 	strcpy(value1, aux.value1);
 	for (int i = 0; i < N_value2; i++) {
 		V_value2[i] = aux.V_value2[i];
 	}
 	value3.x = aux.value3.x;
 	value3.y = aux.value3.y;
-	// Iniciar la sección crítica
+	
 	pthread_mutex_lock(&m);
-	// Llamar a la función modify_value
 	*result = modify_value(key, value1, N_value2, V_value2, value3);
-	// Finalizar la sección crítica
 	pthread_mutex_unlock(&m);
-	// Retornar el resultado
+	
 	return retval;
 }
 
@@ -111,13 +102,11 @@ rpc_delete_key_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 	retval = TRUE;
-	// Iniciar la sección crítica
+	
 	pthread_mutex_lock(&m);
-	// Llamar a la función delete_key
 	*result = delete_key(key);
-	// Finalizar la sección crítica
 	pthread_mutex_unlock(&m);
-	// Retornar el resultado
+	
 	return retval;
 }
 
@@ -126,13 +115,11 @@ rpc_exist_1_svc(int key, int *result,  struct svc_req *rqstp)
 {
 	bool_t retval;
 	retval = TRUE;
-	// Iniciar la sección crítica
+	
 	pthread_mutex_lock(&m);
-	// Llamar a la función exist
 	*result = exist(key);
-	// Finalizar la sección crítica
 	pthread_mutex_unlock(&m);
-	// Retornar el resultado
+	
 	return retval;
 }
 
