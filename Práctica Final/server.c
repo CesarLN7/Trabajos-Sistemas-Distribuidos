@@ -9,8 +9,7 @@
 #include <pthread.h>
 #include <stdbool.h>
 
-#include "claves/claves.h"
-#include "mensaje.h"
+#include "logic/logic.h"
 #include "sockets/sockets.h"
 
 #define MAX_CLIENTS 10
@@ -65,7 +64,7 @@ void tratar_peticion(void *sc) {
         //printf("register %s %s %i\n", buffer_local, ip, port); 
 
         pthread_mutex_lock(&mutex_socket); // acceso a la estructura
-        int result = addUser(usuarios, username, ip, port);
+        int result = registerUser(username, ip, port);
         pthread_mutex_unlock(&mutex_socket);
         
         int8_t to_send_result = (int8_t)result;
@@ -83,9 +82,9 @@ void tratar_peticion(void *sc) {
       
         //printf("register %s %s %i\n", buffer_local, ip, port); 
 
-        pthread_mutex_lock(&mutex_hilos); // acceso a la estructura
-        int result = removeUser(usuarios, username);
-        pthread_mutex_unlock(&mutex_hilos);
+        pthread_mutex_lock(&mutex_socket); // acceso a la estructura
+        int result = unregisterUser(username);
+        pthread_mutex_unlock(&mutex_socket);
         
         int8_t to_send_result = (int8_t)result;
         // envio de resultado => 1 byte
@@ -96,8 +95,6 @@ void tratar_peticion(void *sc) {
             return -1;    
         }
 
-
-        send_rpc(username, "UNREGISTER", timestamp);
 
     } else if (strcmp(buffer_local, "CONNECT") == 0) {
         
