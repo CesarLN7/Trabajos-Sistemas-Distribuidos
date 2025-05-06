@@ -1,106 +1,98 @@
-#ifndef CLAVES_H
-#define CLAVES_H
+#ifndef STORAGE_H
+#define STORAGE_H
 
+#define MAXSTR 256
 
-struct Coord {
-   int x ;
-   int y ;
-} ;
+typedef struct {
+    char name[MAXSTR];
+    char description[MAXSTR];
+} file;
 
+typedef struct {
+    char name[MAXSTR];
+    file* contents;
+    int contentsLen;
+    int contentsMaxLen;
+    int conected;
+    int port;
+    char ip[32];
+} user;
 
-/**
- * @brief Esta llamada permite inicializar el servicio de elementos clave-valor1-valor2-valor3.
- * Mediante este servicio se destruyen todas las tuplas que estuvieran almacenadas previamente.
- * 
- * @return int La función devuelve 0 en caso de éxito y -1 en caso de error.
- * @retval 0 en caso de exito.
- * @retval -1 en caso de error.
- */
-int destroy(void);
+typedef struct {
+    int size;
+    int max_size;
+    user* users;
+} __user_list;
 
-/**
- * @brief Este servicio inserta el elemento <key, value1, value2, value3>. 
- * El vector correspondiente al valor 2 vendrá dado por la dimensión del vector (N_Value2) y 
- * el vector en si (V_value2). 
- * El servicio devuelve 0 si se insertó con éxito y -1 en caso de error. 
- * Se considera error, intentar insertar una clave que ya existe previamente o 
- * que el valor N_value2 esté fuera de rango. En este caso se devolverá -1 y no se insertará. 
- * También se considerará error cualquier error en las comunicaciones.
- * 
- * 
- * @param key clave.
- * @param value1   valor1 [256].
- * @param N_value2 dimensión del vector V_value2 [1-32].
- * @param V_value2 vector de doubles [32].
- * @param value3   estructura Coord.
- * @return int El servicio devuelve 0 si se insertó con éxito y -1 en caso de error.
- * @retval 0 si se insertó con éxito.
- * @retval -1 en caso de error.
- */
-int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3);
+typedef __user_list* user_list;
 
 /**
- * @brief Este servicio permite obtener los valores asociados a la clave key. 
- * La cadena de caracteres asociada se devuelve en value1. 
- * En N_Value2 se devuelve la dimensión del vector asociado al valor 2 y en V_value2 las componentes del vector. 
- * Tanto value1 como V_value2 tienen que tener espacio reservado para poder almacenar el máximo número 
- * de elementos posibles (256 en el caso de la cadena de caracteres y 32 en el caso del vector de doubles). 
- * La función devuelve 0 en caso de éxito y -1 en caso de error, por ejemplo, 
- * si no existe un elemento con dicha clave o si se produce un error de comunicaciones.
- * 
- * 
- * @param key clave.
- * @param value1   valor1 [256].
- * @param N_value2 dimensión del vector V_value2 [1-32] por referencia.
- * @param V_value2 vector de doubles [32].
- * @param value3   estructura Coord por referencia.
- * @return int El servicio devuelve 0 si se insertó con éxito y -1 en caso de error.
- * @retval 0 en caso de éxito.
- * @retval -1 en caso de error.
+ * Crea un usuario en memoria, solo útil si quieres operar con datos temporales.
+ *
+ * @param usr puntero a la estructura user
+ * @param name nombre del usuario
+ * @param ip dirección IP
+ * @param port puerto
+ * @return 0 en caso de éxito, -1 en caso de error
  */
-int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3);
+int createUser(user *usr, char *name, char *ip, int port);
 
 /**
- * @brief Este servicio permite modificar los valores asociados a la clave key. 
- * La función devuelve 0 en caso de éxito y -1 en caso de error, por ejemplo, 
- * si no existe un elemento con dicha clave o si se produce un error en las comunicaciones. 
- * También se devolverá -1 si el valor N_value2 está fuera de rango.
- * 
- * 
- * @param key clave.
- * @param value1   valor1 [256].
- * @param N_value2 dimensión del vector V_value2 [1-32].
- * @param V_value2 vector de doubles [32].
- * @param value3   estructura Coord.
- * @return int El servicio devuelve 0 si se insertó con éxito y -1 en caso de error.
- * @retval 0 si se modificó con éxito.
- * @retval -1 en caso de error.
+ * Agrega un usuario al fichero de usuarios. También crea su fichero de contenidos.
+ *
+ * @param users ignorado, pero mantenido por compatibilidad
+ * @param user_name nombre del usuario
+ * @param ip dirección IP
+ * @param port puerto
+ * @return 0 éxito, 1 si ya existe, -1 en error de fichero
  */
-int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3);
+int addUser(user_list users, char *user_name, char *ip, int port);
 
 /**
- * @brief Este servicio permite borrar el elemento cuya clave es key. 
- * La función devuelve 0 en caso de éxito y -1 en caso de error. 
- * En caso de que la clave no exista también se devuelve -1.
- * 
- * @param key clave.
- * @return int La función devuelve 0 en caso de éxito y -1 en caso de error.
- * @retval 0 en caso de éxito.
- * @retval -1 en caso de error.
+ * Elimina un usuario y su fichero de contenidos.
+ *
+ * @param users ignorado
+ * @param user_name nombre del usuario
+ * @return 0 si éxito, -1 si error o usuario no encontrado
  */
-int delete_key(int key);
+int removeUser(user_list users, char *user_name);
 
 /**
- * @brief Este servicio permite determinar si existe un elemento con clave key.
- * La función devuelve 1 en caso de que exista y 0 en caso de que no exista. 
- * En caso de error se devuelve -1. Un error puede ocurrir en este caso por un problema en las comunicaciones.
- * 
- * @param key clave.
- * @return int La función devuelve 1 en caso de que exista y 0 en caso de que no exista. En caso de error se devuelve -1.
- * @retval 1 en caso de que exista.
- * @retval 0 en caso de que no exista.
- * @retval -1 en caso de error.
+ * Busca un usuario en el fichero de usuarios.
+ *
+ * @param users ignorado
+ * @param user_name nombre del usuario
+ * @return índice si se encuentra, -1 si no
  */
-int exist(int key);
+int searchUser(user_list users, char *user_name);
+
+/**
+ * Añade un contenido al fichero del usuario.
+ *
+ * @param users ignorado
+ * @param user_name nombre del usuario
+ * @param file_name nombre del archivo
+ * @param description descripción del archivo
+ * @return 0 éxito, 1 si el usuario no existe, 3 si el archivo ya existe, -1 error de fichero
+ */
+int addContent(user_list users, char *user_name, char* file_name, char *description);
+
+/**
+ * Elimina un contenido del fichero del usuario.
+ *
+ * @param users ignorado
+ * @param user_name nombre del usuario
+ * @param file_name nombre del archivo
+ * @return 0 éxito, 3 si el archivo no existe, -1 error
+ */
+int removeContent(user_list users, char *user_name, char* file_name);
+
+/**
+ * Destruye la lista. No hace nada en este contexto.
+ *
+ * @param users ignorado
+ * @return siempre 0
+ */
+int destroyList(user_list users);
 
 #endif

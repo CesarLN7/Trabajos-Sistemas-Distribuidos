@@ -1,160 +1,179 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include "logic.h"
 
-#include "claves.h"
-#include "../mensaje.h"
+#define USERS_FILE "users.txt"
+#define MAX_LINE 1024
 
-int destroy() {
-    FILE *file = fopen("data.txt", "w");
-    if (file == NULL) {
-        perror("Error al abrir el archivo");
-        return -1; // Error
-    }
-    fclose(file);
-    printf("Tuplas borradas\n");
-    return 0; // Éxito
+int createUser(user *usr, char *name, char *ip, int port) {
+    if (strlen(name) < 1 || strlen(name) > MAXSTR) return -1;
+    if (strlen(ip) < 1 || strlen(ip) > MAXSTR) return -1;
+
+    strcpy(usr->name, name);
+    usr->conected = 0;
+    usr->port = port;
+    strcpy(usr->ip, ip);
+    usr->contentsLen = 0;
+    usr->contentsMaxLen = 0;
+    usr->contents = NULL;
+
+    return 0;
 }
 
-int exist(int key) {
-    FILE *f = fopen("data.txt", "r");
-    if (f == NULL) {
-        return 0; // No existe
-    }
-    
-    int k;
-    char v1[MAXSTR];
-    int N_v2;
-    double V_v2[MAXVEC];
-    struct Coord value3;
-    
-    while (fscanf(f, "%d %s %d", &k, v1, &N_v2) != EOF) {
-        for (int i = 0; i < N_v2; i++) {
-            fscanf(f, "%lf", &V_v2[i]);
+int userExists(char *username) {
+    FILE *fp = fopen(USERS_FILE, "r");
+    if (!fp) return 0;
+
+    char name[MAXSTR];
+    while (fscanf(fp, "%s", name) == 1) {
+        if (strcmp(name, username) == 0) {
+            fclose(fp);
+            return 1;
         }
-        fscanf(f, "%d %d", &value3.x, &value3.y);
-        
-        if (k == key) {
-            fclose(f);
-            printf("La clave %d existe\n", key);
-            return 1; // Existe
-        }
+        // skip rest of line
+        fgets(name, sizeof(name), fp);
     }
-    fclose(f);
-    printf("La clave %d no existe\n", key);
-    return 0; // No existe
+
+    fclose(fp);
+    return 0;
 }
 
+int addUser(user_list users, char *user_name, char *ip, int port) {
+    if (userExists(user_name)) return 1;
 
-int delete_key(int key) {
-    if (!exist(key)) {
-        return -1; // Error: clave no existe
-    }
-    
-    FILE *file = fopen("data.txt", "r");
-    if (file == NULL) {
-        return -1; // Error al abrir el archivo
-    }
-    
-    FILE *temp = fopen("temp.txt", "w");
-    if (temp == NULL) {
-        fclose(file);
-        return -1; // Error al crear el archivo temporal
-    }
-    
-    int k;
-    char v1[MAXSTR];
-    int N_v2;
-    double V_v2[MAXVEC];
-    struct Coord value3;
-    
-    while (fscanf(file, "%d %s %d", &k, v1, &N_v2) != EOF) {
-        for (int i = 0; i < N_v2; i++) {
-            fscanf(file, "%lf", &V_v2[i]);
-        }
-        fscanf(file, "%d %d", &value3.x, &value3.y);
-        
-        if (k != key) {
-            fprintf(temp, "%d %s %d ", k, v1, N_v2);
-            for (int i = 0; i < N_v2; i++) {
-                fprintf(temp, "%lf ", V_v2[i]);
-            }
-            fprintf(temp, "%d %d\n", value3.x, value3.y);
-        }
-    }
-    
-    fclose(file);
-    fclose(temp);
-    
-    remove("data.txt");
-    rename("temp.txt", "data.txt");
-    printf("La clave %d se ha borrado correctamente\n", key);
-    return 0; // Éxito
+    FILE *fp = fopen(USERS_FILE, "a");
+    if (!fp) return -1;
+
+    fprintf(fp, "%s %s %d 0\n", user_name, ip, port); // 0 = desconectado
+    fclose(fp);
+
+    // Crear fichero vacío para los contenidos
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+    FILE *fc = fopen(fname, "w");
+    if (fc) fclose(fc);
+
+    return 0;
 }
 
+int removeUser(user_list users, char *user_name) {
+    FILE *fp = fopen(USERS_FILE, "r");
+    if (!fp) return -1;
 
-int set_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    printf("La clave %d se va a insertar\n", key);
-
-    if (exist(key)) {
-        return -1; // Error: clave ya existe
-    }
-    
-    FILE *file = fopen("data.txt", "a");
-    if (file == NULL) {
-        return -1; // Error al abrir el archivo
-    }
-    
-    fprintf(file, "%d %s %d ", key, value1, N_value2);
-    for (int i = 0; i < N_value2; i++) {
-        fprintf(file, "%lf ", V_value2[i]);
-    }
-    fprintf(file, "%d %d\n", value3.x, value3.y);
-    fclose(file);
-    printf("La clave %d se ha insertado correctamente\n", key);
-
-    return 0; // Éxito
-}
-
-
-int get_value(int key, char *value1, int *N_value2, double *V_value2, struct Coord *value3) {
-    int exists = exist(key);
-    if (exists == 0)
+    FILE *tmp = fopen("temp.txt", "w");
+    if (!tmp) {
+        fclose(fp);
         return -1;
-        
-    FILE *file = fopen("data.txt", "r");
-    if (file == NULL) {
-        return -1; // Error al abrir el archivo
     }
-    
-    int k;
-    while (fscanf(file, "%d %s %d", &k, value1, N_value2) != EOF) {
-        for (int i = 0; i < *N_value2; i++) {
-            fscanf(file, "%lf", &V_value2[i]);
-        }
-        fscanf(file, "%d %d", &value3->x, &value3->y);
-        
-        if (k == key) {
-            fclose(file);
-            printf("La clave %d se ha obtenido correctamente\n", key);
-            return 0; // Éxito
+
+    char name[MAXSTR], ip[32];
+    int port, connected;
+    int found = 0;
+
+    while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
+        if (strcmp(name, user_name) != 0) {
+            fprintf(tmp, "%s %s %d %d\n", name, ip, port, connected);
+        } else {
+            found = 1;
         }
     }
-    
-    fclose(file);
-    return -1; // Error: clave no encontrada
+
+    fclose(fp);
+    fclose(tmp);
+
+    remove(USERS_FILE);
+    rename("temp.txt", USERS_FILE);
+
+    // Eliminar archivo de contenidos
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+    remove(fname);
+
+    return found ? 0 : -1;
 }
 
+int searchUser(user_list users, char *user_name) {
+    FILE *fp = fopen(USERS_FILE, "r");
+    if (!fp) return -1;
 
-int modify_value(int key, char *value1, int N_value2, double *V_value2, struct Coord value3) {
-    printf("La clave %d se va a modificar\n", key);
-    int exists = exist(key);
-    if (exists == 0)
+    char name[MAXSTR];
+    int index = 0;
+    while (fscanf(fp, "%s", name) == 1) {
+        if (strcmp(name, user_name) == 0) {
+            fclose(fp);
+            return index;
+        }
+        fgets(name, sizeof(name), fp);
+        index++;
+    }
+
+    fclose(fp);
+    return -1;
+}
+
+int addContent(user_list users, char *user_name, char *file_name, char *description) {
+    if (!userExists(user_name)) return 1;
+
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+
+    // Revisar si ya existe
+    FILE *fp = fopen(fname, "r");
+    if (!fp) return -1;
+
+    char filebuf[MAXSTR], descbuf[MAXSTR];
+    while (fscanf(fp, "%s %[^\n]", filebuf, descbuf) == 2) {
+        if (strcmp(filebuf, file_name) == 0) {
+            fclose(fp);
+            return 3;  // Ya existe
+        }
+    }
+    fclose(fp);
+
+    // Agregar contenido
+    fp = fopen(fname, "a");
+    if (!fp) return -1;
+
+    fprintf(fp, "%s %s\n", file_name, description);
+    fclose(fp);
+    return 0;
+}
+
+int removeContent(user_list users, char *user_name, char *file_name) {
+    if (!userExists(user_name)) return 1;
+
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+
+    FILE *fp = fopen(fname, "r");
+    if (!fp) return -1;
+
+    FILE *tmp = fopen("tmp_content.txt", "w");
+    if (!tmp) {
+        fclose(fp);
         return -1;
-    // Borramos la key y la insertamos de nuevo con los nuevos valores
-    delete_key(key);
-    set_value(key, value1, N_value2, V_value2, value3);
-    printf("La clave %d se ha modificado con éxito\n", key);    
+    }
+
+    char f[MAXSTR], desc[MAXSTR];
+    int found = 0;
+    while (fscanf(fp, "%s %[^\n]", f, desc) == 2) {
+        if (strcmp(f, file_name) != 0) {
+            fprintf(tmp, "%s %s\n", f, desc);
+        } else {
+            found = 1;
+        }
+    }
+
+    fclose(fp);
+    fclose(tmp);
+    remove(fname);
+    rename("tmp_content.txt", fname);
+
+    return found ? 0 : 3;
+}
+
+int destroyList(user_list users) {
+    // No se necesita liberar memoria, ya que no hay estructuras dinámicas
     return 0;
 }

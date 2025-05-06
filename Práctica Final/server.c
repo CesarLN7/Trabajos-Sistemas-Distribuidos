@@ -1,96 +1,72 @@
-#include <stdio.h> 
+#include <stdio.h>
 #include <unistd.h>
-#include <signal.h>
 #include <stdlib.h>
-#include <pthread.h>
+#include <fcntl.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <stdbool.h>
+
+#include "claves/claves.h"
+#include "mensaje.h"
 #include "sockets/sockets.h"
-#include "logic/logic.h"
 
-// constantes para el tamaño de arrays
-const int CHAR_SIZE = 256;
-const int ARR_SIZE = 1024;
+#define MAX_CLIENTS 10
 
-user_list usuarios; // lista de usuarios
+const int MAXSTR = 256;
+pthread_mutex_t mutex_socket;
+int socket_ocupado = false;
+pthread_cond_t cond_socket;
 
-// mutex concurrencia
-pthread_mutex_t mutex;
-pthread_mutex_t mutex_hilos;
-pthread_cond_t cond_hilos;
-pthread_cond_t cond;
-int copiado = 0;
+int ss = 54321;
 
-
-int sd = 54321; // socket del servidor
 void stop_server() {
-    /*detiene el servidor*/
-    pthread_mutex_destroy(&mutex);
-    pthread_mutex_destroy(&mutex_hilos);
-    pthread_cond_destroy(&cond_hilos);
-    pthread_cond_destroy(&cond);
+    pthread_mutex_destroy(&mutex_socket);
     printf("Cerrando servidor...\n");
-    if (sd != 54321)
-        close(sd);
+    if (ss != 54321) { close(ss); }
     exit(0);
 }
 
-typedef struct p {
-    int sc;
-    struct sockaddr_in client;
-} peticion;
+void tratar_peticion(void *sc) {
+    int s_local;
 
-int tratar_peticion(void* pet) {
-    // constantes necesarias
-    int local_sc;
-    char ip[32];
-    int port = 0;
-    char buff[ARR_SIZE];
-    char username[ARR_SIZE];
+    char username[MAXSTR];
 
-    pthread_mutex_lock(&mutex);
-    // copia de la petición 
-    local_sc = ((peticion*)pet)->sc;
-    strcpy(ip, inet_ntoa(((peticion*)pet)->client.sin_addr));
-    port = ntohs(((peticion*)pet)->client.sin_port);
-    copiado = 1;
-    pthread_cond_signal(&cond);
-    pthread_mutex_unlock(&mutex);
+    char buffer_local[MAXSTR];
 
-    // leer operacion 
-    if (readLine(local_sc, temp, ARR_SIZE) < 0) {
+    pthread_mutex_lock(&mutex_socket);
+    s_local = (* (int *)sc);
+    free(sc);
+    socket_ocupado = false;
+    pthread_cond_signal(&cond_socket);
+    pthread_mutex_unlock(&mutex_socket);
+    
+    
+    if (readLine(s_local, buffer_local, MAXSTR + 1) < 0) {
         perror("error: readline (coop)");
-        close(local_sc);
+        close(s_local);
         pthread_exit(NULL);
         return -1;
     }
-    // timestamp 
-    if (readLine(local_sc, timestamp, ARR_SIZE) < 0) {
-        perror("error: readline register (timestamp)");
-        close(local_sc);
-        pthread_exit(NULL);
-        return -1;
-    }
-    
-    // leer nombre de usuario
-    if (readLine(local_sc, username, ARR_SIZE) < 0) {
-        perror("error: readline register (username)");
-        close(local_sc);
-        pthread_exit(NULL);
-        return -1;
-    }
-    
-    printf("s> Operacion aceptada de %s\n", username);
-    
 
-    if (strcmp(temp, "REGISTER") == 0) {
+    if (readLine(s_local, username, MAXSTR + 1) < 0) {
+        perror("error: readline (coop)");
+        close(s_local);
+        pthread_exit(NULL);
+        return -1;
+    }
+    
+    printf("s> Tratando operacion de %s\n", username);
+
+    if (strcmp(buffer_local, "REGISTER") == 0) {
         
-        //printf("register %s %s %i\n", temp, ip, port); 
+        //printf("register %s %s %i\n", buffer_local, ip, port); 
 
-        pthread_mutex_lock(&mutex_hilos); // acceso a la estructura
+        pthread_mutex_lock(&mutex_socket); // acceso a la estructura
         int result = addUser(usuarios, username, ip, port);
-        pthread_mutex_unlock(&mutex_hilos);
+        pthread_mutex_unlock(&mutex_socket);
         
         int8_t to_send_result = (int8_t)result;
         // envio de resultado => 1 byte
@@ -101,12 +77,11 @@ int tratar_peticion(void* pet) {
             return -1;    
         }
 
-        send_rpc(username, "REGISTER", timestamp);
 
     }
-    else if (strcmp(temp, "UNREGISTER") == 0) {
+    else if (strcmp(buffer_local, "UNREGISTER") == 0) {
       
-        //printf("register %s %s %i\n", temp, ip, port); 
+        //printf("register %s %s %i\n", buffer_local, ip, port); 
 
         pthread_mutex_lock(&mutex_hilos); // acceso a la estructura
         int result = removeUser(usuarios, username);
@@ -124,7 +99,7 @@ int tratar_peticion(void* pet) {
 
         send_rpc(username, "UNREGISTER", timestamp);
 
-    } else if (strcmp(temp, "CONNECT") == 0) {
+    } else if (strcmp(buffer_local, "CONNECT") == 0) {
         
         char port[ARR_SIZE];
 
@@ -172,9 +147,9 @@ int tratar_peticion(void* pet) {
 
 
     }
-    else if (strcmp(temp, "DISCONNECT") == 0) {
+    else if (strcmp(buffer_local, "DISCONNECT") == 0) {
         
-        //printf("disconnect %s\n", temp); 
+        //printf("disconnect %s\n", buffer_local); 
         int result = 0;
 
         // acceso a la estructura
@@ -204,7 +179,7 @@ int tratar_peticion(void* pet) {
         send_rpc(username, "DISCONNECT", timestamp);
 
     }
-    else if (strcmp(temp, "PUBLISH") == 0) {
+    else if (strcmp(buffer_local, "PUBLISH") == 0) {
         //printf("publish\n"); 
         char fileName[ARR_SIZE];
         char description[ARR_SIZE];
@@ -244,7 +219,7 @@ int tratar_peticion(void* pet) {
         send_rpc(username, cadena, timestamp);
 
     }
-    else if (strcmp(temp, "DELETE") == 0) {
+    else if (strcmp(buffer_local, "DELETE") == 0) {
         char fileName[ARR_SIZE];
         
         // leer nombre fichero
@@ -291,7 +266,7 @@ int tratar_peticion(void* pet) {
         send_rpc(username, cadena, timestamp);
 
     }
-    else if (strcmp(temp, "LIST_USERS") == 0) {
+    else if (strcmp(buffer_local, "LIST_USERS") == 0) {
         //printf("list_users\n"); 
         
         int8_t to_send_result = (int8_t)0;
@@ -309,9 +284,9 @@ int tratar_peticion(void* pet) {
         for (int i = 0; i < usuarios->size; ++i) {
             if (usuarios->users[i].conected)  num_users++;
         }
-        sprintf(temp, "%i", num_users); 
+        sprintf(buffer_local, "%i", num_users); 
         
-        if (writeLine(local_sc, temp) < 0) {
+        if (writeLine(local_sc, buffer_local) < 0) {
             perror("error: writeline list_users (num_users)");
             close(local_sc);
             pthread_exit(NULL);
@@ -321,22 +296,22 @@ int tratar_peticion(void* pet) {
             
             user curr = usuarios->users[i];
             if (curr.conected) {
-                sprintf(temp, "%s", curr.name);
-                if (writeLine(local_sc, temp) < 0) {
+                sprintf(buffer_local, "%s", curr.name);
+                if (writeLine(local_sc, buffer_local) < 0) {
                     perror("error: writeline list_users (name)");
                     close(local_sc);
                     pthread_exit(NULL);
                     return -1;
                 }
-                sprintf(temp, "%s", curr.ip);
-                if (writeLine(local_sc, temp) < 0) {
+                sprintf(buffer_local, "%s", curr.ip);
+                if (writeLine(local_sc, buffer_local) < 0) {
                     perror("error: writeline list_users (ip)");
                     close(local_sc);
                     pthread_exit(NULL);
                     return -1;
                 }
-                sprintf(temp, "%i", curr.port);
-                if (writeLine(local_sc, temp) < 0) {
+                sprintf(buffer_local, "%i", curr.port);
+                if (writeLine(local_sc, buffer_local) < 0) {
                     perror("error: writeline list_users (port)");
                     close(local_sc);
                     pthread_exit(NULL);
@@ -352,10 +327,10 @@ int tratar_peticion(void* pet) {
 
 
     }
-    else if (strcmp(temp, "LIST_CONTENT") == 0) {
+    else if (strcmp(buffer_local, "LIST_CONTENT") == 0) {
         
         // leer nombre de usuario (argumento)
-        if (readLine(local_sc, temp, ARR_SIZE) < 0) {
+        if (readLine(local_sc, buffer_local, ARR_SIZE) < 0) {
             perror("error: readline connect (username)");
             close(local_sc);
             pthread_exit(NULL);
@@ -365,7 +340,7 @@ int tratar_peticion(void* pet) {
 
         // acceso a la estructura
         pthread_mutex_lock(&mutex_hilos);
-        int index = searchUser(usuarios, temp);
+        int index = searchUser(usuarios, buffer_local);
         if (-1 == index) {
             // user does not exists 
             int8_t to_send_result = (int8_t)1;
@@ -399,14 +374,14 @@ int tratar_peticion(void* pet) {
                     return -1;
                 }
 
-                sprintf(temp, "%i", usuarios->users[index].contentsLen); // tamaño de la lista
-                if (writeLine(local_sc, temp) < 0) {
+                sprintf(buffer_local, "%i", usuarios->users[index].contentsLen); // tamaño de la lista
+                if (writeLine(local_sc, buffer_local) < 0) {
                     perror("error: writeLine list_content (Contentslen)");
                     close(local_sc);
                     pthread_exit(NULL);
                     return -1;
                 }
-                //printf("%s\n", temp);
+                //printf("%s\n", buffer_local);
                 for (int i = 0; i < usuarios->users[index].contentsLen; ++i) {
                     //printf("--%s %s\n", usuarios->users[index].contents[i].name, usuarios->users[index].contents[i].description);
 
@@ -433,89 +408,98 @@ int tratar_peticion(void* pet) {
 
     }
     else {
-        fprintf(stderr, "server: not recognised operation (%s)\n", temp);
+        fprintf(stderr, "server: not recognised operation (%s)\n", buffer_local);
         close(local_sc);
         pthread_exit(NULL);
         return -1;
     }
 
-    close(local_sc);
-    //printf("finish: %i\n", local_sc);
-    pthread_exit(NULL);
+    close(s_local);
+    pthread_exit(0);
+
 }
 
-int main(int argc, char* argv[]) {
-    //printf(">>%i\n", send_rpc("paco", "deposit 45"));
-    // validate program input 
-    if (argc != 3) {
-        printf("USAGE: %s %s %s\n", argv[0], "-p", "<port_number>");
-        return -1;
-    }
-    else if (strcmp(argv[1], "-p") != 0) {
-        printf("USAGE: %s %s %s\n", argv[0], "-p", "<port_number>");
-        return -1;
-    }
-    else if (atoi(argv[2]) == 0) {
-        printf("Port number must be numeric and greater than 0\n");
-        return -1;
-    }
-    
+int main(int argc, char *argv[]) {
 
-    // print ip
-    char hostname[256];
-    gethostname(hostname, sizeof(hostname));
-    struct hostent* hp = gethostbyname(hostname);
-    struct in_addr ip;
-    bcopy(hp->h_addr, (char*)&ip, sizeof(ip));
-    char* ip_str = inet_ntoa(ip);
-
-    printf("s> init server %s:%s\n", ip_str, argv[2]);
-
-    // initializations
-    pthread_mutex_init(&mutex, NULL);
-    pthread_mutex_init(&mutex_hilos, NULL);
-    usuarios = createUserList();
+    int sc; /* socket del cliente */
+    struct sockaddr_in server_addr; /* dirección del servidor */
+    int ss, ret; /* socket del servidor */
+    int val = 1; /* valor para setsockopt */
 
     signal(SIGINT, stop_server);
-    
-    //socket
-    int sc;
-    sd = serverSocket(INADDR_ANY, atoi(argv[2]), SOCK_STREAM);
+    if (argc != 2) {
+        perror("Uso: ./servidor <puerto>");
+        return -1;
+    }
 
-    if (sd < 0) {
-        perror("SERVER: Error en serverSocket\n");
+    ss = socket(AF_INET, SOCK_STREAM, 0);
+    if (ss < 0) {
+        printf("SERVER: Error en el socket\n");
+        return (0);
+    }
+
+    setsockopt(ss, SOL_SOCKET, SO_REUSEADDR, (char*)&val, sizeof(int));
+
+    bzero((char*)&server_addr, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_addr.s_addr = INADDR_ANY;
+    server_addr.sin_port = htons(atoi(argv[1]));
+
+    ret = bind(ss, (const struct sockaddr*)&server_addr, sizeof(server_addr));
+    if (ret == -1) {
+        printf("Error en bind\n");
+        return -1;
+    }
+
+    ret = listen(ss, MAX_CLIENTS);
+    if (ret == -1) {
+        printf("Error en listen\n");
+        return -1;
+    }
+
+    if (ss < 0) {
+        printf("SERVER: Error en la inicialización del socket del servidor\n");
         return 0;
     }
 
-    // main loop
-    while (!!1) {
-        peticion p;
-        struct sockaddr_in client;
-        printf("s>\n");
+    while (true) {
+        struct sockaddr_in client_addr; /* dirección del cliente */
+        socklen_t size; /* tamaño de la dirección del cliente */
 
-        sc = serverAccept(sd, &client);
-        p.client = client;
-        p.sc = sc;
+        printf("esperando conexion...\n");
+
+        size = sizeof(client_addr);
+        // poner un trace
+        sc = accept(ss, (struct sockaddr*)&client_addr, (socklen_t*)&size);
+
+        printf("conexión aceptada de IP: %s y puerto: %d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         if (sc < 0) {
-            perror("Error en serverAccept\n");
+            printf("Error en la aceptación de peticiones del servidor\n");
             continue;
         }
-        // hilo por peticion
-        pthread_t hilo;
-        pthread_attr_t attr;
-        pthread_attr_init(&attr);
-        pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-        pthread_create(&hilo, &attr, (void*)tratar_peticion, (void*)&p);
-        pthread_mutex_lock(&mutex);
-        while (!copiado) {
-            pthread_cond_wait(&cond, &mutex);
+
+        pthread_t thid; /* identificador del thread */
+        pthread_attr_t t_attr; /* atributos del thread */
+
+        pthread_attr_init(&t_attr);
+        pthread_attr_setdetachstate(&t_attr, PTHREAD_CREATE_DETACHED);
+        int *sc_ptr = malloc(sizeof(int));
+        if (sc_ptr == NULL) {
+            perror("Error al asignar memoria");
+            continue;
         }
-        copiado = 0;
-        pthread_mutex_unlock(&mutex);
-
+        *sc_ptr = sc;
+        pthread_create(&thid, &t_attr, (void*)tratar_peticion, (void*)sc_ptr);
+        pthread_mutex_lock(&mutex_socket);
+        while (socket_ocupado == true) {
+            printf("Esperando a que se libere el socket...\n");
+            pthread_cond_wait(&cond_socket, &mutex_socket);
+        }
+        socket_ocupado = true;
+        pthread_mutex_unlock(&mutex_socket);
     }
-
+    close(ss);
+    printf("The End.\n");
     return 0;
-
-}
+} /*fin main */
