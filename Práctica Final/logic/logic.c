@@ -75,7 +75,12 @@ int unregisterUser(char *user_name) {
     sprintf(fname, "contents_%s.txt", user_name);
     remove(fname);
 
-    return found ? 0 : -1;
+    if (found) {
+        return 0; // Desregistrado correctamente
+    } else {
+        return -1; // Usuario no encontrado
+    }
+    
 }
 
 int searchUser(char *user_name) {
@@ -155,7 +160,11 @@ int deleteContent(char *user_name, char *file_name) {
     remove(fname);
     rename("tmp_content.txt", fname);
 
-    return found ? 0 : 3;
+    if (found) {
+        return 0; // Eliminado correctamente
+    } else {
+        return 3; // No existe
+    }    
 }
 
 int isConnected(const char *user_name) {
@@ -178,7 +187,7 @@ int isConnected(const char *user_name) {
     return -1; // Usuario no encontrado
 }
 
-int connect(const char *user_name) {
+int connectUser(const char *user_name) {
     FILE *fp = fopen("users.txt", "r");
     if (!fp) return -1;
 
@@ -219,5 +228,49 @@ int connect(const char *user_name) {
         return 1; // Ya estaba conectado
     } else {
         return 0; // Conectado exitosamente
+    }
+}
+
+int disconnectUser(const char *user_name) {
+    FILE *fp = fopen("users.txt", "r");
+    if (!fp) return -1;
+
+    FILE *temp = fopen("users_temp.txt", "w");
+    if (!temp) {
+        fclose(fp);
+        return -1;
+    }
+
+    char name[MAXSTR], ip[32];
+    int port, connected;
+    int found = 0;
+    int disconnected_status = 0;
+
+    while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
+        if (strcmp(name, user_name) == 0) {
+            found = 1;
+            if (connected == 0) {
+                disconnected_status = 1; // Ya estaba desconectado
+            } else {
+                connected = 0; // Cambiar a desconectado
+            }
+        }
+        fprintf(temp, "%s %s %d %d\n", name, ip, port, connected);
+    }
+
+    fclose(fp);
+    fclose(temp);
+
+    if (!found) {
+        remove("users_temp.txt");
+        return -1; // Usuario no encontrado
+    }
+
+    remove("users.txt");
+    rename("users_temp.txt", "users.txt");
+    if (disconnected_status == 1) {
+        return 1; // Ya estaba desconectado
+    } else {
+        return 0; // Desconectado exitosamente
     }
 }

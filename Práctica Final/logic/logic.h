@@ -2,6 +2,7 @@
 #define STORAGE_H
 
 #define MAXSTR 256
+#define MAXVEC 1024
 
 typedef struct {
     char name[MAXSTR];
@@ -69,6 +70,15 @@ int isConnected(const char *user_name);
  *
  * @return 0 if updated, 1 if already in that state, -1 if user not found or error
  */
-int connect(const char *user_name);
+int connectUser(const char *user_name);
+
+/**
+ * Modifies the disconnection status of a user in the file system.
+ *
+ * @param user_name user name
+ *
+ * @return 0 if updated, 1 if already in that state, -1 if user not found or error
+ */
+int disconnectUser(const char *user_name);
 
 #endif
