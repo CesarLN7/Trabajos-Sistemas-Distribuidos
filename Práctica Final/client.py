@@ -157,69 +157,70 @@ class client :
 
     @staticmethod
 
-    def  connect(user) :
+    def connect(user):
 
+        # Creamos un socket temporal para obtener un puerto libre
+        temp_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        temp_listener.bind(('', 0))  # Puerto dinámico
+        port = temp_listener.getsockname()[1]
+        temp_listener.close()
+
+        # Conectamos con el servidor
         sock = client._connect_to_server()
         if not sock:
             print("c> CONNECT FAIL")
             return client.RC.ERROR
 
         try:
-            # Creamos un socket de escucha local
-            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            listener.bind(('', 0))  # Puerto dinámico
-            listener.listen(5)
-            port = listener.getsockname()[1]
-
-            # Guardamos el socket para cerrarlo en disconnect
-            client._listener_socket = listener
-            client._current_user = user
-            client._stop_listener.clear()
-
-            # Lanzamos hilo que simulará escuchar peticiones
-            def listen_loop():
-                while not client._stop_listener.is_set():
-                    listener.settimeout(1.0)
-                    try:
-                        conn, addr = listener.accept()
-                        threading.Thread(target=client._handle_incoming_file_request, args=(conn,), daemon=True).start()
-                    except socket.timeout:
-                        continue
-
-
-            thread = threading.Thread(target=listen_loop, daemon=True)
-            thread.start()
-            client._listener_thread = thread
-
-            # Informamos al servidor de la conexión
             client._send_string(sock, "CONNECT")
             client._send_string(sock, user)
             client._send_string(sock, str(port))
-            code = sock.recv(1)[0]
+            resp = sock.recv(1)
+            if len(resp) < 1:
+                print("c> CONNECT FAIL (no response)")
+                return client.RC.ERROR
+            code = resp[0]
 
             if code == 0:
                 print("c> CONNECT OK")
+                
+                # Solo si ha ido bien, entonces lanzamos el listener
+                listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                listener.bind(('', port))
+                listener.listen(5)
+
+                client._listener_socket = listener
+                client._current_user = user
+                client._stop_listener.clear()
+
+                def listen_loop():
+                    while not client._stop_listener.is_set():
+                        listener.settimeout(1.0)
+                        try:
+                            conn, addr = listener.accept()
+                            threading.Thread(target=client._handle_incoming_file_request, args=(conn,), daemon=True).start()
+                        except socket.timeout:
+                            continue
+
+                thread = threading.Thread(target=listen_loop, daemon=True)
+                thread.start()
+                client._listener_thread = thread
+
                 return client.RC.OK
+
             elif code == 1:
-                print("c> CONNECT FAIL , USER DOES NOT EXIST")
+                print("c> CONNECT FAIL, USER DOES NOT EXIST")
             elif code == 2:
                 print("c> USER ALREADY CONNECTED")
             else:
                 print("c> CONNECT FAIL")
-
-            # Si hubo error, limpiamos
-            client._current_user = None
-            client._stop_listener.set()
-            listener.close()
-            client._listener_socket = None
             return client.RC.ERROR
         finally:
             sock.close()
 
     @staticmethod
 
-    def  disconnect(user) :
-
+    def disconnect(user):
         sock = client._connect_to_server()
         if not sock:
             print("c> DISCONNECT FAIL")
@@ -228,24 +229,32 @@ class client :
         try:
             client._send_string(sock, "DISCONNECT")
             client._send_string(sock, user)
-            code = sock.recv(1)[0]
+            resp = sock.recv(1)
+            if len(resp) < 1:
+                print("c> DISCONNECT FAIL (no response)")
+                return client.RC.ERROR
+            code = resp[0]
 
             if code == 0:
                 print("c> DISCONNECT OK")
-                # Cerramos listener y limpiamos estado
+
+                # Detenemos hilo primero
                 client._stop_listener.set()
-                if client._listener_socket:
-                    client._listener_socket.close()
-                    client._listener_socket = None
                 if client._listener_thread:
                     client._listener_thread.join()
                     client._listener_thread = None
+
+                # Ahora cerramos el socket
+                if client._listener_socket:
+                    client._listener_socket.close()
+                    client._listener_socket = None
+
                 client._current_user = None
                 return client.RC.OK
             elif code == 1:
-                print("c> DISCONNECT FAIL , USER DOES NOT EXIST")
+                print("c> DISCONNECT FAIL, USER DOES NOT EXIST")
             elif code == 2:
-                print("c> DISCONNECT FAIL , USER NOT CONNECTED")
+                print("c> DISCONNECT FAIL, USER NOT CONNECTED")
             else:
                 print("c> DISCONNECT FAIL")
 
@@ -253,22 +262,23 @@ class client :
         finally:
             sock.close()
 
+
     @staticmethod
 
     def  publish(fileName,  description) :
 
-        user = client._current_user
-        if not user:
-            print("c> Error: No user connected. Use CONNECT <userName> first.")
-            return client.RC.USER_ERROR
-
-        if not os.path.exists(fileName):
-            print("c> PUBLISH FAIL , FILE DOES NOT EXIST")
-            return client.RC.ERROR
-
         sock = client._connect_to_server()
         if not sock:
             print("c> PUBLISH FAIL")
+            return client.RC.ERROR
+
+        user = client._current_user
+        if not user:
+            print("c> PUBLISH FAIL, USER NOT CONNECTED")
+            return client.RC.USER_ERROR
+
+        if not os.path.exists(fileName):
+            print("c> PUBLISH FAIL, FILE DOES NOT EXIST")
             return client.RC.ERROR
 
         try:
@@ -282,11 +292,11 @@ class client :
                 print("c> PUBLISH OK")
                 return client.RC.OK
             elif code == 1:
-                print("c> PUBLISH FAIL , USER DOES NOT EXIST")
+                print("c> PUBLISH FAIL, USER DOES NOT EXIST")
             elif code == 2:
-                print("c> PUBLISH FAIL , USER NOT CONNECTED")
+                print("c> PUBLISH FAIL, USER NOT CONNECTED")
             elif code == 3:
-                print("c> PUBLISH FAIL , CONTENT ALREADY PUBLISHED")
+                print("c> PUBLISH FAIL, CONTENT ALREADY PUBLISHED")
             else:
                 print("c> PUBLISH FAIL")
             return client.RC.ERROR
@@ -297,15 +307,15 @@ class client :
 
     def  delete(fileName) :
 
-        user = client._current_user
-        if not user:
-            print("c> Error: No user connected. Use CONNECT <userName> first.")
-            return client.RC.USER_ERROR
-
         sock = client._connect_to_server()
         if not sock:
             print("c> DELETE FAIL")
             return client.RC.ERROR
+
+        user = client._current_user
+        if not user:
+            print("c> DELETE FAIL, USER NOT CONNECTED")
+            return client.RC.USER_ERROR
 
         try:
             client._send_string(sock, "DELETE")
@@ -317,11 +327,11 @@ class client :
                 print("c> DELETE OK")
                 return client.RC.OK
             elif code == 1:
-                print("c> DELETE FAIL , USER DOES NOT EXIST")
+                print("c> DELETE FAIL, USER DOES NOT EXIST")
             elif code == 2:
-                print("c> DELETE FAIL , USER NOT CONNECTED")
+                print("c> DELETE FAIL, USER NOT CONNECTED")
             elif code == 3:
-                print("c> DELETE FAIL , CONTENT NOT PUBLISHED")
+                print("c> DELETE FAIL, CONTENT NOT PUBLISHED")
             else:
                 print("c> DELETE FAIL")
             return client.RC.ERROR
@@ -390,9 +400,9 @@ class client :
                     print(entry)
                 return client.RC.OK
             elif code == 1:
-                print("c> LIST_CONTENT FAIL , USER DOES NOT EXIST")
+                print("c> LIST_CONTENT FAIL, USER DOES NOT EXIST")
             elif code == 2:
-                print("c> LIST_CONTENT FAIL , USER HAS NO CONTENT")
+                print("c> LIST_CONTENT FAIL, USER HAS NO CONTENT")
             else:
                 print("c> LIST_CONTENT FAIL")
             return client.RC.ERROR
@@ -454,7 +464,7 @@ class client :
                 try:
                     size = int(size_str)
                 except:
-                    print("c> GET_FILE FAIL , INVALID SIZE")
+                    print("c> GET_FILE FAIL, INVALID SIZE")
                     conn.close()
                     return client.RC.ERROR
 

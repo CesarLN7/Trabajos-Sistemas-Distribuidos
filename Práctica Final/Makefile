@@ -25,6 +25,6 @@ server.o: server.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o *.out *.so users.txt
+	rm -f *.o *.out *.so users.txt contents_*.txt
 
 re: clean all

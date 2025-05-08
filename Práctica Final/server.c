@@ -70,28 +70,33 @@ void tratar_peticion(void *sc) {
         readLine(s_local, user, MAXSTR);
         readLine(s_local, port_str, MAXSTR);
         int port = atoi(port_str);
-
+    
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
         getpeername(s_local, (struct sockaddr *)&addr, &len);
         char *ip = inet_ntoa(addr.sin_addr);
-
+    
         int reg = exist(user);
         if (!reg) {
             char code = 1; // USER DOES NOT EXIST
             send_message(s_local, &code, 1);
         } else {
-            // Actualizamos IP y puerto (re-registro con IP/puerto y marcado como conectado)
-            unregisterUser(user); // Elimina entrada anterior
             int conn = connectUser(user);
-            if (conn == 0)
-            {
-                char code = (char)((registerUser(user, ip, port) == 0) ? 0 : 1); // OK / ALREADY CONNECTED
+            if (conn == 1) { // ya estaba conectado
+                char code = 2;
+                send_message(s_local, &code, 1);
+            } else if (conn == 0) {
+                // Actualiza IP y puerto
+                updateUserIPPort(user, ip, port);  // <- necesitas implementar esto si no existe
+                char code = 0;
+                send_message(s_local, &code, 1);
+            } else {
+                char code = 3;
                 send_message(s_local, &code, 1);
             }
-            
         }
     }
+    
 
     else if (strcmp(buffer_local, "DISCONNECT") == 0) {
         char user[MAXSTR];
@@ -108,9 +113,15 @@ void tratar_peticion(void *sc) {
         readLine(s_local, file, MAXSTR);
         readLine(s_local, desc, MAXSTR);
 
-        int res = publishContent(user, file, desc);
-        char code = (res == 0) ? 0 : (res == 1 ? 1 : (res == 3 ? 3 : 4)); // OK, no user, ya publicado, error
-        send_message(s_local, &code, 1);
+        if (!exist(user)) {
+            char code = 1;  // Usuario no registrado
+            send_message(s_local, &code, 1);
+        }
+        else {
+            int res = publishContent(user, file, desc);
+            char code = (res == 0) ? 0 : (res == 2 ? 2 : (res == 3 ? 3 : 4)); // OK, no user connected, ya publicado, error
+            send_message(s_local, &code, 1);
+        }
     }
 
     else if (strcmp(buffer_local, "DELETE") == 0) {
@@ -118,9 +129,15 @@ void tratar_peticion(void *sc) {
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
 
-        int res = deleteContent(user, file);
-        char code = (res == 0) ? 0 : (res == 1 ? 1 : (res == 3 ? 3 : 4));
-        send_message(s_local, &code, 1);
+        if (!exist(user)) {
+            char code = 1;  // Usuario no registrado
+            send_message(s_local, &code, 1);
+        }
+        else {
+            int res = deleteContent(user, file);
+            char code = (res == 0) ? 0 : (res == 2 ? 2 : (res == 3 ? 3 : 4)); // OK, no user connected, ya publicado, error
+            send_message(s_local, &code, 1);
+        }
     }
 
     else if (strcmp(buffer_local, "LIST_USERS") == 0) {

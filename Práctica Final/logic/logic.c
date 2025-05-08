@@ -21,6 +21,38 @@ int exist(char *user_name) {
     return 0;
 }
 
+int updateUserIPPort(const char* user, const char* ip, int port) {
+    FILE* fp = fopen("users.txt", "r");
+    if (!fp) return 1;
+
+    FILE* temp = fopen("users_tmp.txt", "w");
+    if (!temp) {
+        fclose(fp);
+        return 1;
+    }
+
+    char name[MAXSTR], ip_buf[32];
+    int port_buf, connected;
+    int found = 0;
+
+    while (fscanf(fp, "%s %s %d %d", name, ip_buf, &port_buf, &connected) == 4) {
+        if (strcmp(name, user) == 0) {
+            fprintf(temp, "%s %s %d 1\n", name, ip, port);  // actualiza IP, puerto, y conectado
+            found = 1;
+        } else {
+            fprintf(temp, "%s %s %d %d\n", name, ip_buf, port_buf, connected);
+        }
+    }
+
+    fclose(fp);
+    fclose(temp);
+
+    remove("users.txt");
+    rename("users_tmp.txt", "users.txt");
+
+    return found ? 0 : 1;
+}
+
 int registerUser(char *user_name, char *ip, int port) {
     if (exist(user_name)) return 1;
 

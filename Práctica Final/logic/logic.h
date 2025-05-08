@@ -7,6 +7,8 @@
 
 int exist(char *user_name);
 
+int updateUserIPPort(const char* user, const char* ip, int port);
+
 int registerUser(char *user_name, char *ip, int port);
 
 int unregisterUser(char *user_name);

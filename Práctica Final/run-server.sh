@@ -2,4 +2,4 @@
 
 make re
 
-./server.out localhost
+./server.out 8080
