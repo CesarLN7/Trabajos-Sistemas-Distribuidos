@@ -29,374 +29,213 @@ void stop_server() {
 
 void tratar_peticion(void *sc) {
     int s_local;
-
-    char username[MAXSTR];
-
     char buffer_local[MAXSTR];
-
     pthread_mutex_lock(&mutex_socket);
-    s_local = (* (int *)sc);
+    s_local = (*(int *)sc);
     free(sc);
     socket_ocupado = false;
     pthread_cond_signal(&cond_socket);
     pthread_mutex_unlock(&mutex_socket);
-    
-    
-    if (readLine(s_local, buffer_local, MAXSTR + 1) < 0) {
-        perror("error: readline (coop)");
-        close(s_local);
-        pthread_exit(NULL);
-        return;
-    }
 
-    if (readLine(s_local, username, MAXSTR + 1) < 0) {
-        perror("error: readline (coop)");
-        close(s_local);
-        pthread_exit(NULL);
-        return;
-    }
-    
-    printf("s> Tratando operacion de %s\n", username);
+    readLine(s_local, buffer_local, MAXSTR);
+    printf("OPERATION %s FROM SOCKET %d\n", buffer_local, s_local);
 
     if (strcmp(buffer_local, "REGISTER") == 0) {
-        
-        //printf("register %s %s %i\n", buffer_local, ip, port); 
+        char user[MAXSTR];
+        readLine(s_local, user, MAXSTR);
 
-        pthread_mutex_lock(&mutex_socket); // acceso a la estructura
-        int result = registerUser(username, ip, port);
-        pthread_mutex_unlock(&mutex_socket);
-        
-        int8_t to_send_result = (int8_t)result;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-            return;    
-        }
+        struct sockaddr_in addr;
+        socklen_t len = sizeof(addr);
+        getpeername(s_local, (struct sockaddr *)&addr, &len);
+        char *ip = inet_ntoa(addr.sin_addr);
 
+        int port = 0; // Por ahora 0 (lo real se registra con CONNECT)
+        int res = registerUser(user, ip, port);
 
+        char code = (char) ((res == 0) ? 0 : (res == 1) ? 1 : 2);
+        send_message(s_local, &code, 1);
     }
+
     else if (strcmp(buffer_local, "UNREGISTER") == 0) {
-      
-        //printf("register %s %s %i\n", buffer_local, ip, port); 
+        char user[MAXSTR];
+        readLine(s_local, user, MAXSTR);
 
-        pthread_mutex_lock(&mutex_socket); // acceso a la estructura
-        int result = unregisterUser(username);
-        pthread_mutex_unlock(&mutex_socket);
-        
-        int8_t to_send_result = (int8_t)result;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-            return;    
-        }
-
-
-    } else if (strcmp(buffer_local, "CONNECT") == 0) {
-        
-        char port[MAXVEC];
-
-        // lectura número de puerto
-        if (readLine(s_local, port, MAXVEC) < 0) {
-            perror("error: readline connect (port_number)");
-            close(s_local);
-            pthread_exit(NULL);
-            return;
-        } 
-        //printf("connect %s %s %s\n", username, sc_ip, port); 
-        int result = 0;
-
-        // acceso a la estructura 
-        pthread_mutex_lock(&mutex_socket);
-        int index = searchUser(username);
-
-        if (index != -1) {
-            if (!usuarios->users[index].conected) {
-                usuarios->users[index].conected = 1;
-                usuarios->users[index].port = atoi(port);
-                result = 0; // todo ok
-            }
-            else {
-                result = 2; // user already conected
-            }
-        }
-        else {
-            result = 1; // user does not exists
-        }
-        pthread_mutex_unlock(&mutex_socket);
-
-        int8_t to_send_result = (int8_t)result;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-        }
-
+        int res = unregisterUser(user);
+        char code = (char)((res == 0) ? 0 : 1);
+        send_message(s_local, &code, 1);
     }
+
+    else if (strcmp(buffer_local, "CONNECT") == 0) {
+        char user[MAXSTR], port_str[MAXSTR];
+        readLine(s_local, user, MAXSTR);
+        readLine(s_local, port_str, MAXSTR);
+        int port = atoi(port_str);
+
+        struct sockaddr_in addr;
+        socklen_t len = sizeof(addr);
+        getpeername(s_local, (struct sockaddr *)&addr, &len);
+        char *ip = inet_ntoa(addr.sin_addr);
+
+        int reg = exist(user);
+        if (!reg) {
+            char code = 1; // USER DOES NOT EXIST
+            send_message(s_local, &code, 1);
+        } else {
+            // Actualizamos IP y puerto (re-registro con IP/puerto y marcado como conectado)
+            unregisterUser(user); // Elimina entrada anterior
+            int conn = connectUser(user);
+            if (conn == 0)
+            {
+                char code = (char)((registerUser(user, ip, port) == 0) ? 0 : 1); // OK / ALREADY CONNECTED
+                send_message(s_local, &code, 1);
+            }
+            
+        }
+    }
+
     else if (strcmp(buffer_local, "DISCONNECT") == 0) {
-        
-        //printf("disconnect %s\n", buffer_local); 
-        int result = 0;
+        char user[MAXSTR];
+        readLine(s_local, user, MAXSTR);
 
-        // acceso a la estructura
-        pthread_mutex_lock(&mutex_socket);
-        int index = searchUser(username);
-        if (index != -1) {
-            if (usuarios->users[index].conected) {
-                usuarios->users[index].conected = 0;
-                result = 0;
-            }
-            else {
-                result = 2; // already disconnected
-            }
-        }
-        else {
-            result = 1; // user does not exists 
-        }
-        pthread_mutex_unlock(&mutex_socket);
-
-        int8_t to_send_result = (int8_t)result;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-        }
-
+        int res = disconnectUser(user);
+        char code = (res == 0) ? 0 : (res == 1 ? 2 : 1); // OK / NOT CONNECTED / USER NOT FOUND
+        send_message(s_local, &code, 1);
     }
+
     else if (strcmp(buffer_local, "PUBLISH") == 0) {
-        //printf("publish\n"); 
-        char fileName[MAXVEC];
-        char description[MAXVEC];
+        char user[MAXSTR], file[MAXSTR], desc[MAXSTR];
+        readLine(s_local, user, MAXSTR);
+        readLine(s_local, file, MAXSTR);
+        readLine(s_local, desc, MAXSTR);
 
-        // leer nombre fichero
-        if (readLine(s_local, fileName, MAXVEC) < 0) {
-            perror("error: readline connect (fileName)");
-            close(s_local);
-            pthread_exit(NULL);
-            return;
-        }
-
-        // leer descripción fichero
-        if (readLine(s_local, description, MAXVEC) < 0) {
-            perror("error: readline connect (description)");
-            close(s_local);
-            pthread_exit(NULL);
-            return;
-        }
-
-        // acceso a la estructura
-        pthread_mutex_lock(&mutex_socket);
-        int result = publish(username, fileName, description);
-        pthread_mutex_unlock(&mutex_socket);
-
-        int8_t to_send_result = (int8_t)result;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-        }
-
-        // concatena op y fileName
-        char cadena[MAXVEC];
-        sprintf(cadena, "%s %s", "PUBLISH", fileName);
-
+        int res = publishContent(user, file, desc);
+        char code = (res == 0) ? 0 : (res == 1 ? 1 : (res == 3 ? 3 : 4)); // OK, no user, ya publicado, error
+        send_message(s_local, &code, 1);
     }
+
     else if (strcmp(buffer_local, "DELETE") == 0) {
-        char fileName[MAXVEC];
-        
-        // leer nombre fichero
-        if (readLine(s_local, fileName, MAXVEC) < 0) {
-            perror("error: readline connect (fileName)");
-            close(s_local);
-            pthread_exit(NULL);
-            return;
-        }
-        //printf("delete ( %s, %s )\n", username, fileName);
+        char user[MAXSTR], file[MAXSTR];
+        readLine(s_local, user, MAXSTR);
+        readLine(s_local, file, MAXSTR);
 
-        // acceso a la estructura
-        pthread_mutex_lock(&mutex_socket);
-        int index = searchUser(username);
-        int result = 0;
-        if (index != -1) {
-            if (usuarios->users[index].conected) {
-                // todo ok
-                result = removeContent(usuarios, username, fileName); 
-
-            }
-            else {
-                // usuario no conectado
-                result = 2;
-            }
-        }
-        else {
-            // usuario no existe
-            result = 1;
-        }
-        pthread_mutex_unlock(&mutex_socket);
-
-        int8_t to_send_result = (int8_t)result;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-        }
-
-        // concat publish + fileName
-        char cadena[MAXVEC];
-        sprintf(cadena, "%s %s", "PUBLISH", fileName);
-
+        int res = deleteContent(user, file);
+        char code = (res == 0) ? 0 : (res == 1 ? 1 : (res == 3 ? 3 : 4));
+        send_message(s_local, &code, 1);
     }
+
     else if (strcmp(buffer_local, "LIST_USERS") == 0) {
-        
-        int8_t to_send_result = (int8_t)0;
-        // envio de resultado => 1 byte
-        if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-            perror("error sending ret_val");
-            close(s_local);
-            pthread_exit(NULL);
-        }
+        char user[MAXSTR];
+        readLine(s_local, user, MAXSTR);
 
-        pthread_mutex_lock(&mutex_socket);
-        
-        // usuarios conectados
-        int num_users = 0;
-        for (int i = 0; i < usuarios->size; ++i) {
-            if (usuarios->users[i].conected)  num_users++;
-        }
-        sprintf(buffer_local, "%i", num_users); 
-        
-        if (writeLine(s_local, buffer_local) < 0) {
-            perror("error: writeline list_users (num_users)");
-            close(s_local);
-            pthread_exit(NULL);
-            return;
-        }
-        for (int i = 0; i < usuarios->size; ++i) {
-            
-            user curr = usuarios->users[i];
-            if (curr.conected) {
-                sprintf(buffer_local, "%s", curr.name);
-                if (writeLine(s_local, buffer_local) < 0) {
-                    perror("error: writeline list_users (name)");
-                    close(s_local);
-                    pthread_exit(NULL);
-                    return;
-                }
-                sprintf(buffer_local, "%s", curr.ip);
-                if (writeLine(s_local, buffer_local) < 0) {
-                    perror("error: writeline list_users (ip)");
-                    close(s_local);
-                    pthread_exit(NULL);
-                    return;
-                }
-                sprintf(buffer_local, "%i", curr.port);
-                if (writeLine(s_local, buffer_local) < 0) {
-                    perror("error: writeline list_users (port)");
-                    close(s_local);
-                    pthread_exit(NULL);
-                    return;
-                }
+        FILE *fp = fopen("users.txt", "r");
+        if (!fp) {
+            char code = 2; // error al abrir archivo
+            send_message(s_local, &code, 1);
+        } else {
+            char code = 0;
+            send_message(s_local, &code, 1);
+
+            // Contar usuarios
+            int count = 0;
+            char name[MAXSTR], ip[32];
+            int port, connected;
+            while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4)
+                count++;
+            rewind(fp);
+
+            char count_str[MAXSTR];
+            sprintf(count_str, "%d", count);
+            send_message(s_local, count_str, strlen(count_str) + 1);
+
+            // Enviar los usuarios
+            while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
+                send_message(s_local, name, strlen(name) + 1);
+                send_message(s_local, ip, strlen(ip) + 1);
+                sprintf(buffer_local, "%d", port);
+                send_message(s_local, buffer_local, strlen(buffer_local) + 1);
             }
-            
-        }
-        pthread_mutex_unlock(&mutex_socket);
 
+            fclose(fp);
+        }
     }
+
     else if (strcmp(buffer_local, "LIST_CONTENT") == 0) {
-        
-        // leer nombre de usuario (argumento)
-        if (readLine(s_local, buffer_local, MAXVEC) < 0) {
-            perror("error: readline connect (username)");
-            close(s_local);
-            pthread_exit(NULL);
-            return;
-        }
-        //printf("list_content %s\n", username);
-
-        // acceso a la estructura
-        pthread_mutex_lock(&mutex_socket);
-        int index = searchUser(buffer_local);
-        if (-1 == index) {
-            // user does not exists 
-            int8_t to_send_result = (int8_t)1;
-            // envio de resultado => 1 byte
-            if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-                perror("error sending ret_val");
-                close(s_local);
-                pthread_exit(NULL);
-                return;
-            }
-
-        }
-        else {
-            //printf("listando contenidos:\n");
-            if (!usuarios->users[index].conected) {
-                int8_t to_send_result = (int8_t)2;
-                // envio de resultado => 1 byte
-                if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-                    perror("error sending ret_val");
-                    close(s_local);
-                    pthread_exit(NULL);
-                    return;
-                }
+        char user[MAXSTR];
+        readLine(s_local, user, MAXSTR);
+    
+        if (!exist(user)) {
+            char code = 1; // usuario no existe
+            send_message(s_local, &code, 1);
+        } else {
+            char fname[MAXSTR + 64];
+            sprintf(fname, "contents_%s.txt", user);
+            FILE *fp = fopen(fname, "r");
+            if (!fp) {
+                char code = 2; // no tiene contenidos
+                send_message(s_local, &code, 1);
             } else {
-                int8_t to_send_result = (int8_t)0;
-                // envio de resultado => 1 byte
-                if (send_message(s_local, (char *)&to_send_result, 1) < 0) {
-                    perror("error sending ret_val");
-                    close(s_local);
-                    pthread_exit(NULL);
-                    return;
+                char code = 0;
+                send_message(s_local, &code, 1);
+    
+                int count = 0;
+                while (fgets(buffer_local, MAXSTR, fp)) count++;
+                rewind(fp);
+    
+                char count_str[MAXSTR];
+                sprintf(count_str, "%d", count);
+                send_message(s_local, count_str, strlen(count_str) + 1);
+    
+                while (fgets(buffer_local, MAXSTR, fp)) {
+                    buffer_local[strcspn(buffer_local, "\n")] = 0;
+                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
                 }
-
-                sprintf(buffer_local, "%i", usuarios->users[index].contentsLen); // tamaño de la lista
-                if (writeLine(s_local, buffer_local) < 0) {
-                    perror("error: writeLine list_content (Contentslen)");
-                    close(s_local);
-                    pthread_exit(NULL);
-                    return;
-                }
-                //printf("%s\n", buffer_local);
-                for (int i = 0; i < usuarios->users[index].contentsLen; ++i) {
-                    //printf("--%s %s\n", usuarios->users[index].contents[i].name, usuarios->users[index].contents[i].description);
-
-                    if (writeLine(s_local, usuarios->users[index].contents[i].name) < 0) {
-                        perror("error: writeLine list_content (FileName)");
-                        close(s_local);
-                        pthread_exit(NULL);
-                        return;
-                    }
-
-                    if (writeLine(s_local, usuarios->users[index].contents[i].description) < 0) {
-                        perror("error: writeLine list_content (description)");
-                        close(s_local);
-                        pthread_exit(NULL);
-                        return;
-                    }
-                }
+                fclose(fp);
             }
         }
-        pthread_mutex_unlock(&mutex_socket);
+    }
 
+    else if (strcmp(buffer_local, "GET_FILE") == 0) {
+        char user[MAXSTR], file[MAXSTR];
+        readLine(s_local, user, MAXSTR);
+        readLine(s_local, file, MAXSTR);
+
+        if (!exist(user)) {
+            char code = 1;
+            send_message(s_local, &code, 1);
+        } else {
+            char fname[MAXSTR + 64];
+            sprintf(fname, "contents_%s.txt", user);
+            FILE *fp = fopen(fname, "r");
+            int found = 0;
+
+            while (fgets(buffer_local, MAXSTR, fp)) {
+                if (strstr(buffer_local, file) != NULL) {
+                    found = 1;
+                    break;
+                }
+            }
+            fclose(fp);
+
+            if (found) {
+                send_message(s_local, buffer_local, strlen(buffer_local) + 1);
+                char code = 0;
+                send_message(s_local, &code, 1);
+            } else {
+                char code = 2;
+                send_message(s_local, &code, 1);
+            }
+        }
     }
     else {
-        fprintf(stderr, "server: not recognised operation (%s)\n", buffer_local);
-        close(s_local);
-        pthread_exit(NULL);
-        return;
+        printf("Comando no reconocido: %s\n", buffer_local);
+        char code = 9;
+        send_message(s_local, &code, 1);
     }
 
     close(s_local);
     pthread_exit(0);
-
 }
+
 
 int main(int argc, char *argv[]) {
 

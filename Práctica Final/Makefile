@@ -1,26 +1,30 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -fPIC
-LDFLAGS = -pthread
-LIB_NAME = libclaves.so
+CFLAGS = -lrt -fPIC -Wall -Wextra -g
 
-SRC_LOGIC = logic/logic.c
-SRC_SOCKETS = sockets/sockets.c
-SRC_SERVER = server.c
+LOGIC_PATH = logic
+SOCKETS_PATH = sockets
 
-OBJ_LOGIC = logic.o
-OBJ_SOCKETS = sockets.o
+SRCS = server.c $(LOGIC_PATH)/logic.c $(SOCKETS_PATH)/sockets.c
+OBJS = server.o logic.o sockets.o
+TARGET = server.out
 
-.PHONY: all clean
+.PHONY: all clean re
 
-all: $(LIB_NAME) server
+all: $(TARGET)
 
-$(LIB_NAME): $(SRC_LOGIC) $(SRC_SOCKETS)
-	$(CC) $(CFLAGS) -c $(SRC_LOGIC) -o logic.o
-	$(CC) $(CFLAGS) -c $(SRC_SOCKETS) -o sockets.o
-	$(CC) -shared -o $(LIB_NAME) logic.o sockets.o
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $@ $^
 
-server: $(SRC_SERVER) $(LIB_NAME)
-	$(CC) $(SRC_SERVER) -L. -lclaves -Wl,-rpath=. $(LDFLAGS) -o server.out
+logic.o: $(LOGIC_PATH)/logic.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+sockets.o: $(SOCKETS_PATH)/sockets.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+server.o: server.c
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o *.so *.out
+	rm -f *.o *.out *.so users.txt
+
+re: clean all

@@ -3,16 +3,13 @@
 #include <string.h>
 #include "logic.h"
 
-#define USERS_FILE "users.txt"
-#define MAX_LINE 1024
-
-int exist(char *username) {
+int exist(char *user_name) {
     FILE *fp = fopen(USERS_FILE, "r");
     if (!fp) return 0;
 
     char name[MAXSTR];
     while (fscanf(fp, "%s", name) == 1) {
-        if (strcmp(name, username) == 0) {
+        if (strcmp(name, user_name) == 0) {
             fclose(fp);
             return 1;
         }
@@ -81,110 +78,6 @@ int unregisterUser(char *user_name) {
         return -1; // Usuario no encontrado
     }
     
-}
-
-int searchUser(char *user_name) {
-    FILE *fp = fopen(USERS_FILE, "r");
-    if (!fp) return -1;
-
-    char name[MAXSTR];
-    int index = 0;
-    while (fscanf(fp, "%s", name) == 1) {
-        if (strcmp(name, user_name) == 0) {
-            fclose(fp);
-            return index;
-        }
-        fgets(name, sizeof(name), fp);
-        index++;
-    }
-
-    fclose(fp);
-    return -1;
-}
-
-int publish(char *user_name, char *file_name, char *description) {
-    if (!exist(user_name)) return 1;
-
-    char fname[MAXSTR + 64];
-    sprintf(fname, "contents_%s.txt", user_name);
-
-    // Revisar si ya existe
-    FILE *fp = fopen(fname, "r");
-    if (!fp) return -1;
-
-    char filebuf[MAXSTR], descbuf[MAXSTR];
-    while (fscanf(fp, "%s %[^\n]", filebuf, descbuf) == 2) {
-        if (strcmp(filebuf, file_name) == 0) {
-            fclose(fp);
-            return 3;  // Ya existe
-        }
-    }
-    fclose(fp);
-
-    // Agregar contenido
-    fp = fopen(fname, "a");
-    if (!fp) return -1;
-
-    fprintf(fp, "%s %s\n", file_name, description);
-    fclose(fp);
-    return 0;
-}
-
-int deleteContent(char *user_name, char *file_name) {
-    if (!exist(user_name)) return 1;
-
-    char fname[MAXSTR + 64];
-    sprintf(fname, "contents_%s.txt", user_name);
-
-    FILE *fp = fopen(fname, "r");
-    if (!fp) return -1;
-
-    FILE *tmp = fopen("tmp_content.txt", "w");
-    if (!tmp) {
-        fclose(fp);
-        return -1;
-    }
-
-    char f[MAXSTR], desc[MAXSTR];
-    int found = 0;
-    while (fscanf(fp, "%s %[^\n]", f, desc) == 2) {
-        if (strcmp(f, file_name) != 0) {
-            fprintf(tmp, "%s %s\n", f, desc);
-        } else {
-            found = 1;
-        }
-    }
-
-    fclose(fp);
-    fclose(tmp);
-    remove(fname);
-    rename("tmp_content.txt", fname);
-
-    if (found) {
-        return 0; // Eliminado correctamente
-    } else {
-        return 3; // No existe
-    }    
-}
-
-int isConnected(const char *user_name) {
-    FILE *fp = fopen("users.txt", "r");
-    if (!fp) {
-        return -1;  // No se puede abrir el archivo
-    }
-
-    char name[MAXSTR], ip[32];
-    int port, connected;
-
-    while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
-        if (strcmp(name, user_name) == 0) {
-            fclose(fp);
-            return connected ? 0 : 1;
-        }
-    }
-
-    fclose(fp);
-    return -1; // Usuario no encontrado
 }
 
 int connectUser(const char *user_name) {
@@ -273,4 +166,129 @@ int disconnectUser(const char *user_name) {
     } else {
         return 0; // Desconectado exitosamente
     }
+}
+
+int publishContent(char *user_name, char *file_name, char *description) {
+    if (!exist(user_name)) return 1;
+
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+
+    // Revisar si ya existe
+    FILE *fp = fopen(fname, "r");
+    if (!fp) return -1;
+
+    char filebuf[MAXSTR], descbuf[MAXSTR];
+    while (fscanf(fp, "%s %[^\n]", filebuf, descbuf) == 2) {
+        if (strcmp(filebuf, file_name) == 0) {
+            fclose(fp);
+            return 3;  // Ya existe
+        }
+    }
+    fclose(fp);
+
+    // Agregar contenido
+    fp = fopen(fname, "a");
+    if (!fp) return -1;
+
+    fprintf(fp, "%s %s\n", file_name, description);
+    fclose(fp);
+    return 0;
+}
+
+int deleteContent(char *user_name, char *file_name) {
+    if (!exist(user_name)) return 1;
+
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+
+    FILE *fp = fopen(fname, "r");
+    if (!fp) return -1;
+
+    FILE *tmp = fopen("tmp_content.txt", "w");
+    if (!tmp) {
+        fclose(fp);
+        return -1;
+    }
+
+    char f[MAXSTR], desc[MAXSTR];
+    int found = 0;
+    while (fscanf(fp, "%s %[^\n]", f, desc) == 2) {
+        if (strcmp(f, file_name) != 0) {
+            fprintf(tmp, "%s %s\n", f, desc);
+        } else {
+            found = 1;
+        }
+    }
+
+    fclose(fp);
+    fclose(tmp);
+    remove(fname);
+    rename("tmp_content.txt", fname);
+
+    if (found) {
+        return 0; // Eliminado correctamente
+    } else {
+        return 3; // No existe
+    }    
+}
+
+int listUsers() {
+    FILE *fp = fopen("users.txt", "r");
+    if (!fp) return -1;
+
+    char name[MAXSTR], ip[32];
+    int port, connected;
+
+    printf("Usuarios conectados:\n");
+    while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
+        if (connected == 1) {
+            printf("- %s %s %d\n", name, ip, port);
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+int listContent(char *user_name) {
+    if (!exist(user_name)) return 1;
+
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+
+    FILE *fp = fopen(fname, "r");
+    if (!fp) return -1;
+
+    char file_name[MAXSTR], description[MAXSTR];
+    printf("Contenidos publicados por %s:\n", user_name);
+    while (fscanf(fp, "%s %[^\n]", file_name, description) == 2) {
+        printf("- %s: %s\n", file_name, description);
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+int getFile(char *user_name, char *file_name) {
+    if (!exist(user_name)) return 1;
+
+    char fname[MAXSTR + 64];
+    sprintf(fname, "contents_%s.txt", user_name);
+
+    FILE *fp = fopen(fname, "r");
+    if (!fp) return -1;
+
+    char filebuf[MAXSTR], descbuf[MAXSTR];
+    while (fscanf(fp, "%s %[^\n]", filebuf, descbuf) == 2) {
+        if (strcmp(filebuf, file_name) == 0) {
+            fclose(fp);
+            // Enviar el archivo al cliente
+            // Implementar la lógica de envío del archivo aquí
+            return 0; // Archivo enviado correctamente
+        }
+    }
+
+    fclose(fp);
+    return 3; // Archivo no encontrado
 }

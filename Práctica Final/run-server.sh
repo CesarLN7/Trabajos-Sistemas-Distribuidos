@@ -1,5 +1,6 @@
 #!/bin/bash
 
-make server
+make clean
+make
 
 ./server.out -p localhost
