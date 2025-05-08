@@ -2,4 +2,4 @@
 
 make re
 
-./server.out -p localhost
+./server.out localhost
