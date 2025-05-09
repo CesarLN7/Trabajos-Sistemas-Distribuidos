@@ -87,7 +87,7 @@ void tratar_peticion(void *sc) {
                 send_message(s_local, &code, 1);
             } else if (conn == 0) {
                 // Actualiza IP y puerto
-                updateUserIPPort(user, ip, port);  // <- necesitas implementar esto si no existe
+                updateUserIPPort(user, ip, port);
                 char code = 0;
                 send_message(s_local, &code, 1);
             } else {
@@ -263,7 +263,7 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, stop_server);
     if (argc != 2) {
-        perror("Uso: ./servidor <puerto>");
+        perror("Uso: ./servidor -p <puerto>");
         return -1;
     }
 
