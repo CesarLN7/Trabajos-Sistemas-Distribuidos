@@ -2,4 +2,4 @@
 
 make re
 
-./server.out -p 9000
+./server.out -p 9100
