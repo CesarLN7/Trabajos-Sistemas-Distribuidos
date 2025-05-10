@@ -342,50 +342,55 @@ class client :
     
     def listusers():
         
-        user = client._current_user
-        if not user:
-            print("c> Error: No user connected. Use CONNECT first.")
-            return client.RC.USER_ERROR
-
         sock = client._connect_to_server()
         if not sock:
             print("c> LIST_USERS FAIL")
             return client.RC.ERROR
+        
+        user = client._current_user
+        if not user:
+            print("c> LIST_USERS FAIL, USER NOT CONNECTED")
+            return client.RC.USER_ERROR
 
         try:
             client._send_string(sock, "LIST_USERS")
             client._send_string(sock, user)
             code = sock.recv(1)[0]
 
-            if code != 0:
+            if code == 0:
+                count = int(client._recv_string(sock))
+                print("c> LIST_USERS OK")
+                for _ in range(count):
+                    name = client._recv_string(sock)
+                    ip = client._recv_string(sock)
+                    port = client._recv_string(sock)
+                    print(f"{name} {ip} {port}")
+                return client.RC.OK
+            elif code == 1:
+                print("c> LIST_USERS FAIL, USER DOES NOT EXIST")
+            elif code == 2:
+                print("c> LIST_USERS FAIL, USER NOT CONNECTED")
+            else:
                 print("c> LIST_USERS FAIL")
-                return client.RC.ERROR
+            return client.RC.ERROR
 
-            count = int(client._recv_string(sock))
-            print("c> LIST_USERS OK")
-            for _ in range(count):
-                name = client._recv_string(sock)
-                ip = client._recv_string(sock)
-                port = client._recv_string(sock)
-                print(f"{name} {ip} {port}")
-            return client.RC.OK
         finally:
             sock.close()
             
     @staticmethod
     
     def listcontent(target_user):
-        
-        user = client._current_user
-        if not user:
-            print("c> Error: No user connected. Use CONNECT first.")
-            return client.RC.USER_ERROR
 
         sock = client._connect_to_server()
         if not sock:
             print("c> LIST_CONTENT FAIL")
             return client.RC.ERROR
-
+        
+        user = client._current_user
+        if not user:
+            print("c> LIST_CONTENT FAIL, USER NOT CONNECTED")
+            return client.RC.USER_ERROR
+        
         try:
             client._send_string(sock, "LIST_CONTENT")
             client._send_string(sock, user)

@@ -178,14 +178,22 @@ void tratar_peticion(void *sc) {
 
     else if (strcmp(buffer_local, "LIST_CONTENT") == 0) {
         char user[MAXSTR];
+        char target_user[MAXSTR];
         readLine(s_local, user, MAXSTR);
+        readLine(s_local, target_user, MAXSTR);
     
         if (!exist(user)) {
             char code = 1; // usuario no existe
             send_message(s_local, &code, 1);
+        }
+
+        else if (!exist(target_user)) {
+            char code = 1; // usuario no existe
+            send_message(s_local, &code, 1);
+
         } else {
             char fname[MAXSTR + 64];
-            sprintf(fname, "contents_%s.txt", user);
+            sprintf(fname, "contents_%s.txt", target_user);
             FILE *fp = fopen(fname, "r");
             if (!fp) {
                 char code = 2; // no tiene contenidos
@@ -278,7 +286,7 @@ int main(int argc, char *argv[]) {
     bzero((char*)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(atoi(argv[1]));
+    server_addr.sin_port = htons(atoi(argv[2]));
 
     ret = bind(ss, (const struct sockaddr*)&server_addr, sizeof(server_addr));
     if (ret == -1) {
