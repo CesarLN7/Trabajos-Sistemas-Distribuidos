@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 ./client.py -s 163.117.142.41 -p 8080
+python3 ./client.py -s localhost -p 8080

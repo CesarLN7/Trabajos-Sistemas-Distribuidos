@@ -38,11 +38,12 @@ void tratar_peticion(void *sc) {
     pthread_mutex_unlock(&mutex_socket);
 
     readLine(s_local, buffer_local, MAXSTR);
-    printf("OPERATION %s FROM SOCKET %d\n", buffer_local, s_local);
 
     if (strcmp(buffer_local, "REGISTER") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
+        printf("s> OPERATION REGISTER FROM %s\n", user);
+        printf("s>\n");
 
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -59,6 +60,7 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "UNREGISTER") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
+        printf("s> OPERATION UNREGISTER FROM %s\n", user);
 
         int res = unregisterUser(user);
         char code = (char)((res == 0) ? 0 : 1);
@@ -70,6 +72,7 @@ void tratar_peticion(void *sc) {
         readLine(s_local, user, MAXSTR);
         readLine(s_local, port_str, MAXSTR);
         int port = atoi(port_str);
+        printf("s> OPERATION CONNECT FROM %s\n", user);
     
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -101,6 +104,7 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "DISCONNECT") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
+        printf("s> OPERATION DISCONNECT FROM %s\n", user);
 
         int res = disconnectUser(user);
         char code = (res == 0) ? 0 : (res == 1 ? 2 : 1); // OK / NOT CONNECTED / USER NOT FOUND
@@ -112,6 +116,7 @@ void tratar_peticion(void *sc) {
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
         readLine(s_local, desc, MAXSTR);
+        printf("s> OPERATION PUBLISH FROM %s\n", user);
 
         if (!exist(user)) {
             char code = 1;  // Usuario no registrado
@@ -128,6 +133,7 @@ void tratar_peticion(void *sc) {
         char user[MAXSTR], file[MAXSTR];
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
+        printf("s> OPERATION DELETE FROM %s\n", user);
 
         if (!exist(user)) {
             char code = 1;  // Usuario no registrado
@@ -143,6 +149,7 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "LIST_USERS") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
+        printf("s> OPERATION LIST_USERS FROM %s\n", user);
 
         FILE *fp = fopen("users.txt", "r");
         if (!fp) {
@@ -181,6 +188,7 @@ void tratar_peticion(void *sc) {
         char target_user[MAXSTR];
         readLine(s_local, user, MAXSTR);
         readLine(s_local, target_user, MAXSTR);
+        printf("s> OPERATION LIST_CONTENT FROM %s\n", user);
     
         if (!exist(user)) {
             char code = 1; // usuario no existe
@@ -223,6 +231,7 @@ void tratar_peticion(void *sc) {
         char user[MAXSTR], file[MAXSTR];
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
+        printf("s> OPERATION GET_FILE FROM %s\n", user);
 
         if (!exist(user)) {
             char code = 1;
@@ -270,7 +279,7 @@ int main(int argc, char *argv[]) {
     int val = 1; /* valor para setsockopt */
 
     signal(SIGINT, stop_server);
-    if (argc != 3 || strcmp(argv[1], "-p") != 0) {
+    if (argc != 3) {
         perror("Uso: ./servidor -p <puerto>");
         return -1;
     }
@@ -290,7 +299,7 @@ int main(int argc, char *argv[]) {
 
     ret = bind(ss, (const struct sockaddr*)&server_addr, sizeof(server_addr));
     if (ret == -1) {
-        perror("Error en bind");
+        printf("Error en bind\n");
         return -1;
     }
 
@@ -305,17 +314,16 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
+    printf("s> init server %d:%d\n", ntohs(server_addr.sin_addr.s_addr), ntohs(server_addr.sin_port));
+    printf("s>\n");
+
     while (true) {
         struct sockaddr_in client_addr; /* dirección del cliente */
         socklen_t size; /* tamaño de la dirección del cliente */
 
-        printf("esperando conexion...\n");
-
         size = sizeof(client_addr);
         // poner un trace
         sc = accept(ss, (struct sockaddr*)&client_addr, (socklen_t*)&size);
-
-        printf("conexión aceptada de IP: %s y puerto: %d\n", inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
         if (sc < 0) {
             printf("Error en la aceptación de peticiones del servidor\n");
