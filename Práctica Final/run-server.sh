@@ -2,4 +2,4 @@
 
 make re
 
-./server.out -p 8080
+./server.out -p 9000
