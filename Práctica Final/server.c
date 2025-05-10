@@ -270,7 +270,7 @@ int main(int argc, char *argv[]) {
     int val = 1; /* valor para setsockopt */
 
     signal(SIGINT, stop_server);
-    if (argc != 2) {
+    if (argc != 3 || strcmp(argv[1], "-p") != 0) {
         perror("Uso: ./servidor -p <puerto>");
         return -1;
     }
