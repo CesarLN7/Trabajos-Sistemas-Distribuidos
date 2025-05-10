@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python3 ./client.py -s 163.117.142.41 -p 9100
+python3 ./client.py -s 163.117.142.41 -p 8080
