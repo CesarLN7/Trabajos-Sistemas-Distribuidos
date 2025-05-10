@@ -290,7 +290,7 @@ int main(int argc, char *argv[]) {
 
     ret = bind(ss, (const struct sockaddr*)&server_addr, sizeof(server_addr));
     if (ret == -1) {
-        printf("Error en bind\n");
+        perror("Error en bind");
         return -1;
     }
 
