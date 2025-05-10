@@ -42,8 +42,7 @@ void tratar_peticion(void *sc) {
     if (strcmp(buffer_local, "REGISTER") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
-        printf("s> OPERATION REGISTER FROM %s\n", user);
-        printf("s>\n");
+        printf("OPERATION REGISTER FROM %s\n", user);
 
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -60,7 +59,7 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "UNREGISTER") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
-        printf("s> OPERATION UNREGISTER FROM %s\n", user);
+        printf("OPERATION UNREGISTER FROM %s\n", user);
 
         int res = unregisterUser(user);
         char code = (char)((res == 0) ? 0 : 1);
@@ -72,7 +71,7 @@ void tratar_peticion(void *sc) {
         readLine(s_local, user, MAXSTR);
         readLine(s_local, port_str, MAXSTR);
         int port = atoi(port_str);
-        printf("s> OPERATION CONNECT FROM %s\n", user);
+        printf("OPERATION CONNECT FROM %s\n", user);
     
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -104,7 +103,7 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "DISCONNECT") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
-        printf("s> OPERATION DISCONNECT FROM %s\n", user);
+        printf("OPERATION DISCONNECT FROM %s\n", user);
 
         int res = disconnectUser(user);
         char code = (res == 0) ? 0 : (res == 1 ? 2 : 1); // OK / NOT CONNECTED / USER NOT FOUND
@@ -116,7 +115,7 @@ void tratar_peticion(void *sc) {
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
         readLine(s_local, desc, MAXSTR);
-        printf("s> OPERATION PUBLISH FROM %s\n", user);
+        printf("OPERATION PUBLISH FROM %s\n", user);
 
         if (!exist(user)) {
             char code = 1;  // Usuario no registrado
@@ -133,7 +132,7 @@ void tratar_peticion(void *sc) {
         char user[MAXSTR], file[MAXSTR];
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
-        printf("s> OPERATION DELETE FROM %s\n", user);
+        printf("OPERATION DELETE FROM %s\n", user);
 
         if (!exist(user)) {
             char code = 1;  // Usuario no registrado
@@ -149,7 +148,7 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "LIST_USERS") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
-        printf("s> OPERATION LIST_USERS FROM %s\n", user);
+        printf("OPERATION LIST_USERS FROM %s\n", user);
 
         FILE *fp = fopen("users.txt", "r");
         if (!fp) {
@@ -188,7 +187,7 @@ void tratar_peticion(void *sc) {
         char target_user[MAXSTR];
         readLine(s_local, user, MAXSTR);
         readLine(s_local, target_user, MAXSTR);
-        printf("s> OPERATION LIST_CONTENT FROM %s\n", user);
+        printf("OPERATION LIST_CONTENT FROM %s\n", user);
     
         if (!exist(user)) {
             char code = 1; // usuario no existe
@@ -231,7 +230,7 @@ void tratar_peticion(void *sc) {
         char user[MAXSTR], file[MAXSTR];
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
-        printf("s> OPERATION GET_FILE FROM %s\n", user);
+        printf("OPERATION GET_FILE FROM %s\n", user);
 
         if (!exist(user)) {
             char code = 1;
@@ -265,7 +264,9 @@ void tratar_peticion(void *sc) {
         char code = 9;
         send_message(s_local, &code, 1);
     }
-
+    
+    printf("s> ");
+    fflush(stdout);
     close(s_local);
     pthread_exit(0);
 }
@@ -315,7 +316,8 @@ int main(int argc, char *argv[]) {
     }
 
     printf("s> init server %d:%d\n", ntohs(server_addr.sin_addr.s_addr), ntohs(server_addr.sin_port));
-    printf("s>\n");
+    printf("s> ");
+    fflush(stdout);
 
     while (true) {
         struct sockaddr_in client_addr; /* dirección del cliente */
