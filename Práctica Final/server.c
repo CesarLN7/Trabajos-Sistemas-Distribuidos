@@ -286,7 +286,7 @@ int main(int argc, char *argv[]) {
     bzero((char*)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(atoi(argv[2]));
+    server_addr.sin_port = htons(atoi(argv[3]));
 
     ret = bind(ss, (const struct sockaddr*)&server_addr, sizeof(server_addr));
     if (ret == -1) {
