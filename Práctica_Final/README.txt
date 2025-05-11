@@ -6,7 +6,7 @@ En la primera:
 Y en la segunda: 
     ./run-client.sh
 
-El primer script corresponde a la compilación del programa y el ejecutable del servidor.
+El primer script corresponde a la compilación del programa y los ejecutables del servidor y el servicio web.
 
 El segundo script ejecuta el archivo de cliente en Python.
 Si se quieren ejecutar varios clientes, se debe abrir una terminal diferente para cada cliente ya que si dos o más usuarios 
