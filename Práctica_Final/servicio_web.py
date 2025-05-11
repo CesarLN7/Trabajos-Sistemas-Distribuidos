@@ -22,7 +22,7 @@ from wsgiref.simple_server import make_server, WSGIRequestHandler
 
 class QuietHandler(WSGIRequestHandler):
     def log_message(self, format, *args):
-        pass  # Override para no imprimir nada
+        pass  # Para no imprimir nada
 
 if __name__ == '__main__':
     wsgi_app = WsgiApplication(application)
