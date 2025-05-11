@@ -26,5 +26,6 @@ server.o: server.c
 
 clean:
 	rm -f *.o *.out *.so users.txt contents_*.txt
-
+	rm -rf tmp/copias/*
+	
 re: clean all

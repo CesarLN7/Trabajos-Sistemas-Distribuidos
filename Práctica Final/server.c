@@ -218,45 +218,53 @@ void tratar_peticion(void *sc) {
                 send_message(s_local, count_str, strlen(count_str) + 1);
     
                 while (fgets(buffer_local, MAXSTR, fp)) {
-                    buffer_local[strcspn(buffer_local, "\n")] = 0;
-                    send_message(s_local, buffer_local, strlen(buffer_local) + 1);
+                    buffer_local[strcspn(buffer_local, "\n")] = 0;  // Elimina salto de línea
+                    char *fichero = strtok(buffer_local, " ");      // Obtiene solo la primera palabra
+                    if (fichero != NULL) {
+                        send_message(s_local, fichero, strlen(fichero) + 1);
+                    }
                 }
+
                 fclose(fp);
             }
         }
     }
 
     else if (strcmp(buffer_local, "GET_FILE") == 0) {
-        char user[MAXSTR], file[MAXSTR];
+        char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
-        readLine(s_local, file, MAXSTR);
         printf("OPERATION GET_FILE FROM %s\n", user);
 
-        if (!exist(user)) {
-            char code = 1;
+        FILE *fp = fopen("users.txt", "r");
+        if (!fp) {
+            char code = 2; // error al abrir archivo
             send_message(s_local, &code, 1);
         } else {
-            char fname[MAXSTR + 64];
-            sprintf(fname, "contents_%s.txt", user);
-            FILE *fp = fopen(fname, "r");
-            int found = 0;
+            char code = 0;
+            send_message(s_local, &code, 1);
 
-            while (fgets(buffer_local, MAXSTR, fp)) {
-                if (strstr(buffer_local, file) != NULL) {
-                    found = 1;
-                    break;
-                }
-            }
-            fclose(fp);
+            // Contar usuarios
+            int count = 0;
+            char name[MAXSTR], ip[32];
+            int port, connected;
+            while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4)
+                count++;
+            rewind(fp);
 
-            if (found) {
+            char count_str[MAXSTR];
+            sprintf(count_str, "%d", count);
+            send_message(s_local, count_str, strlen(count_str) + 1);
+
+            // Enviar los usuarios
+            while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
+                send_message(s_local, name, strlen(name) + 1);
+                send_message(s_local, ip, strlen(ip) + 1);
+                sprintf(buffer_local, "%d", port);
                 send_message(s_local, buffer_local, strlen(buffer_local) + 1);
-                char code = 0;
-                send_message(s_local, &code, 1);
-            } else {
-                char code = 2;
-                send_message(s_local, &code, 1);
             }
+
+            fclose(fp);
+        
         }
     }
     else {

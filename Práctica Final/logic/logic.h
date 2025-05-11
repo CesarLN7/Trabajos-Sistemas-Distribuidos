@@ -21,10 +21,6 @@ int publishContent(char *user_name, char *file_name, char *description);
 
 int deleteContent(char *user_name, char *file_name);
 
-int listUsers();
-
-int listContent(char *user_name);
-
 int getFile(char *user_name, char *file_name);
 
 #endif

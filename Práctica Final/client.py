@@ -399,7 +399,7 @@ class client :
 
             if code == 0:
                 count = int(client._recv_string(sock))
-                print(f"c> LIST_CONTENT OK ({count} items)")
+                print(f"c> LIST_CONTENT OK")
                 for _ in range(count):
                     entry = client._recv_string(sock)
                     print(entry)
@@ -428,7 +428,7 @@ class client :
             return client.RC.ERROR
 
         try:
-            client._send_string(sock, "LIST_USERS")
+            client._send_string(sock, "GET_FILE")
             client._send_string(sock, client._current_user)
             code = sock.recv(1)[0]
 
@@ -450,7 +450,7 @@ class client :
             sock.close()
 
         if not target_ip or not target_port:
-            print("c> GET_FILE FAIL, USER NOT FOUND OR NOT CONNECTED")
+            print("c> GET_FILE FAIL")
             return client.RC.ERROR
 
         # Paso 2: conectarse al cliente remoto
@@ -469,7 +469,7 @@ class client :
                 try:
                     size = int(size_str)
                 except:
-                    print("c> GET_FILE FAIL, INVALID SIZE")
+                    print("c> GET_FILE FAIL")
                     conn.close()
                     return client.RC.ERROR
 
@@ -489,7 +489,7 @@ class client :
                 else:
                     f.close()
                     os.remove(local_FileName)
-                    print("c> GET_FILE FAIL, INCOMPLETE TRANSFER")
+                    print("c> GET_FILE FAIL")
                     conn.close()
                     return client.RC.ERROR
 

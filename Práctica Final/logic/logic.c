@@ -265,43 +265,6 @@ int deleteContent(char *user_name, char *file_name) {
     }    
 }
 
-int listUsers() {
-    FILE *fp = fopen("users.txt", "r");
-    if (!fp) return -1;
-
-    char name[MAXSTR], ip[32];
-    int port, connected;
-
-    printf("Usuarios conectados:\n");
-    while (fscanf(fp, "%s %s %d %d", name, ip, &port, &connected) == 4) {
-        if (connected == 1) {
-            printf("- %s %s %d\n", name, ip, port);
-        }
-    }
-
-    fclose(fp);
-    return 0;
-}
-
-int listContent(char *user_name) {
-    if (!exist(user_name)) return 1;
-
-    char fname[MAXSTR + 64];
-    sprintf(fname, "contents_%s.txt", user_name);
-
-    FILE *fp = fopen(fname, "r");
-    if (!fp) return -1;
-
-    char file_name[MAXSTR], description[MAXSTR];
-    printf("Contenidos publicados por %s:\n", user_name);
-    while (fscanf(fp, "%s %[^\n]", file_name, description) == 2) {
-        printf("- %s: %s\n", file_name, description);
-    }
-
-    fclose(fp);
-    return 0;
-}
-
 int getFile(char *user_name, char *file_name) {
     if (!exist(user_name)) return 1;
 
