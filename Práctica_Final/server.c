@@ -20,6 +20,7 @@ pthread_cond_t cond_socket;
 
 int ss = 54321;
 
+// Función para cerrar el servidor
 void stop_server() {
     pthread_mutex_destroy(&mutex_socket);
     printf("Cerrando servidor...\n");
@@ -27,6 +28,7 @@ void stop_server() {
     exit(0);
 }
 
+// Función para tratar la petición del cliente
 void tratar_peticion(void *sc) {
     int s_local;
     char buffer_local[MAXSTR];
@@ -39,6 +41,7 @@ void tratar_peticion(void *sc) {
 
     readLine(s_local, buffer_local, MAXSTR);
 
+    // El servidor recibe el comando REGISTER y lo procesa
     if (strcmp(buffer_local, "REGISTER") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -56,6 +59,7 @@ void tratar_peticion(void *sc) {
         send_message(s_local, &code, 1);
     }
 
+    // El servidor recibe el comando UNREGISTER y lo procesa
     else if (strcmp(buffer_local, "UNREGISTER") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -66,6 +70,7 @@ void tratar_peticion(void *sc) {
         send_message(s_local, &code, 1);
     }
 
+    // El servidor recibe el comando CONNECT y lo procesa
     else if (strcmp(buffer_local, "CONNECT") == 0) {
         char user[MAXSTR], port_str[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -99,7 +104,7 @@ void tratar_peticion(void *sc) {
         }
     }
     
-
+    // El servidor recibe el comando DISCONNECT y lo procesa
     else if (strcmp(buffer_local, "DISCONNECT") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -110,6 +115,7 @@ void tratar_peticion(void *sc) {
         send_message(s_local, &code, 1);
     }
 
+    // El servidor recibe el comando PUBLISH y lo procesa
     else if (strcmp(buffer_local, "PUBLISH") == 0) {
         char user[MAXSTR], file[MAXSTR], desc[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -128,6 +134,7 @@ void tratar_peticion(void *sc) {
         }
     }
 
+    // El servidor recibe el comando DELETE y lo procesa
     else if (strcmp(buffer_local, "DELETE") == 0) {
         char user[MAXSTR], file[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -145,6 +152,7 @@ void tratar_peticion(void *sc) {
         }
     }
 
+    // El servidor recibe el comando LIST_USERS y lo procesa
     else if (strcmp(buffer_local, "LIST_USERS") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -182,6 +190,7 @@ void tratar_peticion(void *sc) {
         }
     }
 
+    // El servidor recibe el comando LIST_CONTENT y lo procesa
     else if (strcmp(buffer_local, "LIST_CONTENT") == 0) {
         char user[MAXSTR];
         char target_user[MAXSTR];
@@ -230,6 +239,7 @@ void tratar_peticion(void *sc) {
         }
     }
 
+    // El servidor recibe el comando GET_FILE y lo procesa
     else if (strcmp(buffer_local, "GET_FILE") == 0) {
         char user[MAXSTR];
         readLine(s_local, user, MAXSTR);
@@ -273,13 +283,14 @@ void tratar_peticion(void *sc) {
         send_message(s_local, &code, 1);
     }
     
+    // Cerrar el socket del cliente y liberar la memoria
     printf("s> ");
     fflush(stdout);
     close(s_local);
     pthread_exit(0);
 }
 
-
+// Función principal del servidor
 int main(int argc, char *argv[]) {
 
     int sc; /* socket del cliente */
@@ -327,6 +338,7 @@ int main(int argc, char *argv[]) {
     printf("s> ");
     fflush(stdout);
 
+    // Bucle infinito para aceptar conexiones
     while (true) {
         struct sockaddr_in client_addr; /* dirección del cliente */
         socklen_t size; /* tamaño de la dirección del cliente */

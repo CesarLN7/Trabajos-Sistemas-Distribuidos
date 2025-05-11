@@ -41,11 +41,13 @@ class client :
 
     @staticmethod
     
+    # Función para enviar una cadena al socket  
     def _send_string(sock, string):
         sock.sendall(string.encode() + b'\0')
 
     @staticmethod
     
+    # Función para recibir una cadena del socket
     def _recv_string(sock):
         data = b''
         while True:
@@ -57,6 +59,7 @@ class client :
 
     @staticmethod
     
+    # Función para conectarse al servidor
     def _connect_to_server():
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -67,6 +70,7 @@ class client :
     
     @staticmethod
     
+    # Función para manejar la solicitud de archivo entrante
     def _handle_incoming_file_request(conn):
         try:
             op = client._recv_string(conn)
@@ -104,6 +108,7 @@ class client :
 
     @staticmethod
 
+    # Función para registrar un usuario
     def  register(user) :
 
         sock = client._connect_to_server()
@@ -130,6 +135,7 @@ class client :
 
     @staticmethod
 
+    # Función para desregistrar un usuario
     def  unregister(user) :
 
         sock = client._connect_to_server()
@@ -156,6 +162,7 @@ class client :
 
     @staticmethod
 
+    # Función para conectar un usuario y abrir un socket
     def connect(user):
 
         # Creamos un socket temporal para obtener un puerto libre
@@ -219,6 +226,7 @@ class client :
 
     @staticmethod
 
+    # Función para desconectar un usuario y cerrar el socket
     def disconnect(user):
         sock = client._connect_to_server()
         if not sock:
@@ -264,6 +272,7 @@ class client :
 
     @staticmethod
 
+    # Función para publicar un archivo en el servidor
     def  publish(fileName,  description) :
 
         sock = client._connect_to_server()
@@ -304,6 +313,7 @@ class client :
 
     @staticmethod
 
+    # Función para eliminar un archivo
     def  delete(fileName) :
 
         sock = client._connect_to_server()
@@ -339,6 +349,7 @@ class client :
 
     @staticmethod
     
+    # Función para listar usuarios
     def listusers():
         
         sock = client._connect_to_server()
@@ -378,6 +389,7 @@ class client :
             
     @staticmethod
     
+    # Función para listar el contenido de un usuario
     def listcontent(target_user):
 
         sock = client._connect_to_server()
@@ -416,6 +428,7 @@ class client :
 
     @staticmethod
     
+    # Función para obtener un archivo de un usuario remoto
     def getfile(user, remote_FileName, local_FileName):
         # Paso 1: obtener IP y puerto del usuario mediante LIST_USERS
         target_ip = None

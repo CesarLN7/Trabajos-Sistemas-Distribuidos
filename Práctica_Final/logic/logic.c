@@ -3,6 +3,7 @@
 #include <string.h>
 #include "logic.h"
 
+// Función para verificar si un usuario existe
 int exist(char *user_name) {
     FILE *fp = fopen(USERS_FILE, "r");
     if (!fp) return 0;
@@ -21,6 +22,7 @@ int exist(char *user_name) {
     return 0;
 }
 
+// Función para actualizar la IP y el puerto de un usuario
 int updateUserIPPort(const char* user, const char* ip, int port) {
     FILE* fp = fopen("users.txt", "r");
     if (!fp) return 1;
@@ -53,6 +55,7 @@ int updateUserIPPort(const char* user, const char* ip, int port) {
     return found ? 0 : 1;
 }
 
+// Función para registrar un nuevo usuario
 int registerUser(char *user_name, char *ip, int port) {
     if (exist(user_name)) return 1;
 
@@ -71,6 +74,7 @@ int registerUser(char *user_name, char *ip, int port) {
     return 0;
 }
 
+// Función para desregistrar un usuario
 int unregisterUser(char *user_name) {
     FILE *fp = fopen(USERS_FILE, "r");
     if (!fp) return -1;
@@ -112,6 +116,7 @@ int unregisterUser(char *user_name) {
     
 }
 
+// Función para conectar un usuario
 int connectUser(const char *user_name) {
     FILE *fp = fopen("users.txt", "r");
     if (!fp) return -1;
@@ -156,6 +161,7 @@ int connectUser(const char *user_name) {
     }
 }
 
+// Función para desconectar un usuario
 int disconnectUser(const char *user_name) {
     FILE *fp = fopen("users.txt", "r");
     if (!fp) return -1;
@@ -200,6 +206,7 @@ int disconnectUser(const char *user_name) {
     }
 }
 
+// Función para publicar contenido
 int publishContent(char *user_name, char *file_name, char *description) {
     if (!exist(user_name)) return 1;
 
@@ -228,6 +235,7 @@ int publishContent(char *user_name, char *file_name, char *description) {
     return 0;
 }
 
+// Función para eliminar contenido
 int deleteContent(char *user_name, char *file_name) {
     if (!exist(user_name)) return 1;
 
@@ -263,27 +271,4 @@ int deleteContent(char *user_name, char *file_name) {
     } else {
         return 3; // No existe
     }    
-}
-
-int getFile(char *user_name, char *file_name) {
-    if (!exist(user_name)) return 1;
-
-    char fname[MAXSTR + 64];
-    sprintf(fname, "contents_%s.txt", user_name);
-
-    FILE *fp = fopen(fname, "r");
-    if (!fp) return -1;
-
-    char filebuf[MAXSTR], descbuf[MAXSTR];
-    while (fscanf(fp, "%s %[^\n]", filebuf, descbuf) == 2) {
-        if (strcmp(filebuf, file_name) == 0) {
-            fclose(fp);
-            // Enviar el archivo al cliente
-            // Implementar la lógica de envío del archivo aquí
-            return 0; // Archivo enviado correctamente
-        }
-    }
-
-    fclose(fp);
-    return 3; // Archivo no encontrado
 }
