@@ -2,7 +2,6 @@
 #define LOGIC_H
 
 #define MAXSTR 256
-#define MAXVEC 1024
 #define USERS_FILE "users.txt"
 
 int exist(char *user_name);

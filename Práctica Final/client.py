@@ -5,8 +5,7 @@ import socket
 import os
 import threading
 
-
-
+MAXCHUNK = 4096
 
 class client :
 
@@ -93,7 +92,7 @@ class client :
             # Enviar contenido
             with open(path, "rb") as f:
                 while True:
-                    chunk = f.read(4096)
+                    chunk = f.read(MAXCHUNK)
                     if not chunk:
                         break
                     conn.sendall(chunk)
@@ -476,7 +475,7 @@ class client :
                 with open(local_FileName, "wb") as f:
                     remaining = size
                     while remaining > 0:
-                        data = conn.recv(min(4096, remaining))
+                        data = conn.recv(min(MAXCHUNK, remaining))
                         if not data:
                             break
                         f.write(data)
