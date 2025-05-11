@@ -1,4 +1,5 @@
 from enum import Enum
+from zeep import Client
 
 import argparse
 import socket
@@ -105,6 +106,18 @@ class client :
             print(f"c> ERROR handling GET FILE: {e}")
         finally:
             conn.close()
+            
+    @staticmethod
+    
+    # Función para obtener la fecha y hora actual
+    def _get_current_datetime():
+        try:
+            wsdl = "http://127.0.0.1:8090/?wsdl"
+            soap_client = Client(wsdl=wsdl)
+            return soap_client.service.get_datetime()
+        except Exception as e:
+            print(f"ERROR: No se pudo obtener fecha y hora: {e}")
+            return "00/00/0000 00:00:00"
 
     @staticmethod
 
@@ -115,9 +128,12 @@ class client :
         if not sock:
             print("c> REGISTER FAIL")
             return client.RC.ERROR
+        
+        fecha_hora = client._get_current_datetime()
 
         try:
             client._send_string(sock, "REGISTER")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             code = sock.recv(1)[0]
 
@@ -143,8 +159,11 @@ class client :
             print("c> UNREGISTER FAIL")
             return client.RC.ERROR
 
+        fecha_hora = client._get_current_datetime()
+
         try:
             client._send_string(sock, "UNREGISTER")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             code = sock.recv(1)[0]
 
@@ -176,9 +195,12 @@ class client :
         if not sock:
             print("c> CONNECT FAIL")
             return client.RC.ERROR
+        
+        fecha_hora = client._get_current_datetime()
 
         try:
             client._send_string(sock, "CONNECT")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             client._send_string(sock, str(port))
             resp = sock.recv(1)
@@ -228,13 +250,17 @@ class client :
 
     # Función para desconectar un usuario y cerrar el socket
     def disconnect(user):
+        
         sock = client._connect_to_server()
         if not sock:
             print("c> DISCONNECT FAIL")
             return client.RC.ERROR
+        
+        fecha_hora = client._get_current_datetime()
 
         try:
             client._send_string(sock, "DISCONNECT")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             resp = sock.recv(1)
             if len(resp) < 1:
@@ -279,6 +305,8 @@ class client :
         if not sock:
             print("c> PUBLISH FAIL")
             return client.RC.ERROR
+        
+        fecha_hora = client._get_current_datetime()
 
         user = client._current_user
         if not user:
@@ -291,6 +319,7 @@ class client :
 
         try:
             client._send_string(sock, "PUBLISH")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             client._send_string(sock, fileName)
             client._send_string(sock, description)
@@ -320,6 +349,8 @@ class client :
         if not sock:
             print("c> DELETE FAIL")
             return client.RC.ERROR
+        
+        fecha_hora = client._get_current_datetime()
 
         user = client._current_user
         if not user:
@@ -328,6 +359,7 @@ class client :
 
         try:
             client._send_string(sock, "DELETE")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             client._send_string(sock, fileName)
             code = sock.recv(1)[0]
@@ -357,6 +389,8 @@ class client :
             print("c> LIST_USERS FAIL")
             return client.RC.ERROR
         
+        fecha_hora = client._get_current_datetime()
+        
         user = client._current_user
         if not user:
             print("c> LIST_USERS FAIL, USER NOT CONNECTED")
@@ -364,6 +398,7 @@ class client :
 
         try:
             client._send_string(sock, "LIST_USERS")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             code = sock.recv(1)[0]
 
@@ -397,6 +432,8 @@ class client :
             print("c> LIST_CONTENT FAIL")
             return client.RC.ERROR
         
+        fecha_hora = client._get_current_datetime()
+        
         user = client._current_user
         if not user:
             print("c> LIST_CONTENT FAIL, USER NOT CONNECTED")
@@ -404,6 +441,7 @@ class client :
         
         try:
             client._send_string(sock, "LIST_CONTENT")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, user)
             client._send_string(sock, target_user)
             code = sock.recv(1)[0]
@@ -438,9 +476,12 @@ class client :
         if not sock:
             print("c> GET_FILE FAIL")
             return client.RC.ERROR
+        
+        fecha_hora = client._get_current_datetime()
 
         try:
             client._send_string(sock, "GET_FILE")
+            client._send_string(sock, fecha_hora)
             client._send_string(sock, client._current_user)
             code = sock.recv(1)[0]
 

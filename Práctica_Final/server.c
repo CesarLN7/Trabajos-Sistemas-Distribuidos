@@ -44,8 +44,10 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando REGISTER y lo procesa
     if (strcmp(buffer_local, "REGISTER") == 0) {
         char user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
-        printf("OPERATION REGISTER FROM %s\n", user);
+        printf("OPERATION REGISTER FROM %s  %s\n", user, fecha_hora);
 
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -62,8 +64,10 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando UNREGISTER y lo procesa
     else if (strcmp(buffer_local, "UNREGISTER") == 0) {
         char user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
-        printf("OPERATION UNREGISTER FROM %s\n", user);
+        printf("OPERATION UNREGISTER FROM %s  %s\n", user, fecha_hora);
 
         int res = unregisterUser(user);
         char code = (char)((res == 0) ? 0 : 1);
@@ -72,11 +76,14 @@ void tratar_peticion(void *sc) {
 
     // El servidor recibe el comando CONNECT y lo procesa
     else if (strcmp(buffer_local, "CONNECT") == 0) {
-        char user[MAXSTR], port_str[MAXSTR];
+        char user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        char port_str[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
         readLine(s_local, port_str, MAXSTR);
         int port = atoi(port_str);
-        printf("OPERATION CONNECT FROM %s\n", user);
+        printf("OPERATION CONNECT FROM %s  %s\n", user, fecha_hora);
     
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
@@ -107,8 +114,10 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando DISCONNECT y lo procesa
     else if (strcmp(buffer_local, "DISCONNECT") == 0) {
         char user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
-        printf("OPERATION DISCONNECT FROM %s\n", user);
+        printf("OPERATION DISCONNECT FROM %s  %s\n", user, fecha_hora);
 
         int res = disconnectUser(user);
         char code = (res == 0) ? 0 : (res == 1 ? 2 : 1); // OK / NOT CONNECTED / USER NOT FOUND
@@ -118,10 +127,12 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando PUBLISH y lo procesa
     else if (strcmp(buffer_local, "PUBLISH") == 0) {
         char user[MAXSTR], file[MAXSTR], desc[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
         readLine(s_local, desc, MAXSTR);
-        printf("OPERATION PUBLISH FROM %s\n", user);
+        printf("OPERATION PUBLISH FROM %s  %s\n", user, fecha_hora);
 
         if (!exist(user)) {
             char code = 1;  // Usuario no registrado
@@ -137,9 +148,11 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando DELETE y lo procesa
     else if (strcmp(buffer_local, "DELETE") == 0) {
         char user[MAXSTR], file[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
         readLine(s_local, file, MAXSTR);
-        printf("OPERATION DELETE FROM %s\n", user);
+        printf("OPERATION DELETE FROM %s  %s\n", user, fecha_hora);
 
         if (!exist(user)) {
             char code = 1;  // Usuario no registrado
@@ -155,8 +168,10 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando LIST_USERS y lo procesa
     else if (strcmp(buffer_local, "LIST_USERS") == 0) {
         char user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
-        printf("OPERATION LIST_USERS FROM %s\n", user);
+        printf("OPERATION LIST_USERS FROM %s  %s\n", user, fecha_hora);
 
         FILE *fp = fopen("users.txt", "r");
         if (!fp) {
@@ -194,9 +209,11 @@ void tratar_peticion(void *sc) {
     else if (strcmp(buffer_local, "LIST_CONTENT") == 0) {
         char user[MAXSTR];
         char target_user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
         readLine(s_local, target_user, MAXSTR);
-        printf("OPERATION LIST_CONTENT FROM %s\n", user);
+        printf("OPERATION LIST_CONTENT FROM %s  %s\n", user, fecha_hora);
     
         if (!exist(user)) {
             char code = 1; // usuario no existe
@@ -242,8 +259,10 @@ void tratar_peticion(void *sc) {
     // El servidor recibe el comando GET_FILE y lo procesa
     else if (strcmp(buffer_local, "GET_FILE") == 0) {
         char user[MAXSTR];
+        char fecha_hora[MAXSTR];
+        readLine(s_local, fecha_hora, MAXSTR);
         readLine(s_local, user, MAXSTR);
-        printf("OPERATION GET_FILE FROM %s\n", user);
+        printf("OPERATION GET_FILE FROM %s  %s\n", user, fecha_hora);
 
         FILE *fp = fopen("users.txt", "r");
         if (!fp) {
